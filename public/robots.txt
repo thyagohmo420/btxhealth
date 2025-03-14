@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://btx-health.netlify.app/sitemap.xml
