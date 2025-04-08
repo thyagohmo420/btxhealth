@@ -107,8 +107,10 @@ export default function Reception() {
 
   const handleSendToTriage = async (patientId: string) => {
     try {
-      await updatePatient(patientId, { status: 'in_progress' })
+      await updatePatient(patientId, { status: 'waiting_triage' })
       toast.success('Paciente enviado para triagem')
+      // Atualizar lista de pacientes
+      await refreshPatients();
     } catch (error) {
       console.error('Erro ao enviar paciente para triagem:', error);
       toast.error('Erro ao enviar paciente para triagem')
@@ -145,19 +147,18 @@ export default function Reception() {
 
       // Obter o último número de senha usado hoje
       const today = new Date().toISOString().split('T')[0]; // formato YYYY-MM-DD
-      const { data: lastPatient, error: queryError } = await supabase
+      const { data: lastPatients, error: queryError } = await supabase
         .from('patients')
         .select('queue_number')
         .like('created_at', `${today}%`)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
       let nextQueueNumber = 1;
       
-      if (!queryError && lastPatient && lastPatient.queue_number) {
+      if (!queryError && lastPatients && lastPatients.length > 0 && lastPatients[0].queue_number) {
         // Extrair o número da senha (assumindo formato A001, A002, etc.)
-        const match = lastPatient.queue_number.match(/A(\d+)/);
+        const match = lastPatients[0].queue_number.match(/A(\d+)/);
         if (match && match[1]) {
           // Incrementar o número
           nextQueueNumber = parseInt(match[1], 10) + 1;
@@ -380,7 +381,13 @@ export default function Reception() {
                     <div className="flex items-center space-x-2 mb-2">
                       <h3 className="font-medium text-gray-900">{patient.full_name}</h3>
                       <span className="px-2 py-1 text-sm font-semibold rounded-md bg-blue-100 text-blue-800">
-                        Senha: {patient.queue_number}
+                        {patient.queue_number || "Sem senha"}
+                      </span>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-md ${getPriorityColor(patient.priority)}`}>
+                        {patient.priority === 'emergency' ? 'Emergência' :
+                          patient.priority === 'high' ? 'Alta' :
+                          patient.priority === 'medium' ? 'Média' :
+                          patient.priority === 'low' ? 'Baixa' : 'Normal'}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -395,12 +402,15 @@ export default function Reception() {
                       </p>
                     )}
                   </div>
-                  <Button
-                    onClick={() => handleSendToTriage(patient.id)}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Enviar para Triagem
-                  </Button>
+                  <div className="flex flex-col items-end space-y-2">
+                    <span className="text-xl font-bold text-blue-600">{patient.queue_number || "Sem senha"}</span>
+                    <Button
+                      onClick={() => handleSendToTriage(patient.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Enviar para Triagem
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
