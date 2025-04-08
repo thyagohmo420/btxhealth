@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Bell, User, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../lib/auth';
 
 export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, signOut } = useAuthStore();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/login');
+    router.push('/login');
   };
 
   return (
@@ -47,7 +47,7 @@ export default function Header() {
           </>
         ) : (
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => router.push('/login')}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             Entrar

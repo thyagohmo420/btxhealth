@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabaseClient';
-
-interface Senha {
-  id: string;
-  numero: number;
-  tipo: string;
-  status: string;
-  patient_id?: string;
-  professional_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Senha, SetorTipo, SenhaStatus, PrioridadeTipo } from '@/types/queue';
 
 export function useSenhas() {
   const [senhas, setSenhas] = useState<Senha[]>([]);
@@ -24,11 +14,7 @@ export function useSenhas() {
         .select('*')
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Erro ao buscar senhas:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       setSenhas(data || []);
     } catch (error) {
       console.error('Erro ao buscar senhas:', error);
@@ -41,15 +27,12 @@ export function useSenhas() {
   useEffect(() => {
     fetchSenhas();
 
-    // Inscrever para atualizações em tempo real
     const channel = supabase
       .channel('senhas_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'senhas' },
-        () => {
-          fetchSenhas();
-        }
+        fetchSenhas
       )
       .subscribe();
 
@@ -58,32 +41,31 @@ export function useSenhas() {
     };
   }, []);
 
-  const criarSenha = async (tipo: string, patientId?: string) => {
+  const criarSenha = async (setor: SetorTipo, priority: PrioridadeTipo = 'normal', patientId?: string) => {
     try {
-      // Buscar o último número de senha
       const { data: ultimaSenha } = await supabase
         .from('senhas')
-        .select('numero')
-        .order('numero', { ascending: false })
+        .select('number')
+        .order('created_at', { ascending: false })
         .limit(1);
 
-      const proximoNumero = (ultimaSenha?.[0]?.numero || 0) + 1;
+      const proximoNumero = (ultimaSenha?.[0]?.number || 0) + 1;
 
       const { data, error } = await supabase
         .from('senhas')
-        .insert([
-          {
-            numero: proximoNumero,
-            tipo,
-            status: 'waiting',
-            patient_id: patientId
-          }
-        ])
+        .insert([{
+          number: proximoNumero.toString().padStart(3, '0'),
+          sector: setor,
+          status: 'aguardando',
+          priority,
+          patient_id: patientId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
       if (error) throw error;
-
       toast.success('Senha gerada com sucesso!');
       return data;
     } catch (error) {
@@ -93,17 +75,19 @@ export function useSenhas() {
     }
   };
 
-  const atualizarSenha = async (id: string, updates: Partial<Senha>) => {
+  const atualizarSenha = async (id: string, updates: Partial<Omit<Senha, 'id' | 'created_at'>>) => {
     try {
       const { data, error } = await supabase
         .from('senhas')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-
       toast.success('Senha atualizada com sucesso!');
       return data;
     } catch (error) {
@@ -114,7 +98,7 @@ export function useSenhas() {
   };
 
   const getSenhasAtivas = () => {
-    return senhas.filter(senha => senha.status === 'waiting' || senha.status === 'called');
+    return senhas.filter(senha => senha.status === 'aguardando' || senha.status === 'chamado');
   };
 
   return {

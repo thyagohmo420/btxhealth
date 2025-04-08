@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePatients } from '../contexts/PatientsContext';
+import { Patient } from '@/types/patient';
+import { supabase } from '@/lib/supabase';
 
 export default function TVDisplay() {
-  const { patients } = usePatients();
+  const { patients, setPatients } = usePatients();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Atualizar o horário a cada 10 segundos
@@ -14,15 +16,38 @@ export default function TVDisplay() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('*')
+          .in('status', ['waiting_consultation', 'in_progress'])
+          .order('priority', { ascending: false })
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        setPatients(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar pacientes:', error);
+      }
+    };
+
+    fetchPatients();
+    const interval = setInterval(fetchPatients, 5000); // Atualiza a cada 5 segundos
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Separar pacientes por setor
   const receptionPatients = patients.filter(p => p.status === 'waiting');
-  const triagePatients = patients.filter(p => p.status === 'in_triage');
-  const consultationPatients = patients.filter(p => p.status === 'in_service');
+  const triagePatients = patients.filter(p => p.status === 'waiting_triage');
+  const consultationPatients = patients.filter(p => p.status === 'waiting_consultation');
 
   // Ordenar pacientes por horário de chegada
-  const sortByArrival = (patientList: any[]) => {
+  const sortByArrival = (patientList: Patient[]) => {
     return [...patientList].sort((a, b) => {
-      return new Date(a.lastUpdate).getTime() - new Date(b.lastUpdate).getTime();
+      return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
     });
   };
 
@@ -31,7 +56,7 @@ export default function TVDisplay() {
     title, 
     color 
   }: { 
-    patients: any[], 
+    patients: Patient[], 
     title: string, 
     color: string 
   }) => (
@@ -41,29 +66,31 @@ export default function TVDisplay() {
         <span>({patients.length})</span>
       </h3>
       <div className="space-y-2">
-        {sortByArrival(patients).map(patient => (
-          <div key={patient.id} className="bg-white p-3 rounded-lg shadow">
+        {sortByArrival(patients).map((patient) => (
+          <div
+            key={patient.id}
+            className={`card bg-white shadow-md rounded-lg p-4 ${
+              patient.status === 'in_progress' ? 'border-l-4 border-blue-500' : ''
+            }`}
+          >
             <div className="flex justify-between items-start">
               <div>
-                <div className="text-xl font-bold text-gray-900">
-                  {patient.name.split(' ')[0]}
-                </div>
-                <div className="text-gray-600">
-                  Senha: {patient.ticketNumber}
-                </div>
-                <div className="text-sm text-gray-500">
-                  Chegada: {patient.arrivalTime}
-                </div>
+                <h3 className="text-lg font-semibold">{patient.full_name}</h3>
+                <p className="text-sm text-gray-600">
+                  {patient.status === 'in_progress' ? 'Em atendimento' : 'Aguardando consulta'}
+                </p>
               </div>
               {patient.priority && (
                 <span className={`px-2 py-1 text-sm rounded-full ${
-                  patient.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                  patient.priority === 'priority' ? 'bg-yellow-100 text-yellow-800' :
+                  patient.priority === 'emergency' ? 'bg-purple-100 text-purple-800' :
+                  patient.priority === 'high' ? 'bg-red-100 text-red-800' :
+                  patient.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-green-100 text-green-800'
                 }`}>
-                  {patient.priority === 'urgent' ? 'Emergência' :
-                   patient.priority === 'priority' ? 'Prioritário' :
-                   'Normal'}
+                  {patient.priority === 'emergency' ? 'Emergência' :
+                  patient.priority === 'high' ? 'Alta' :
+                  patient.priority === 'medium' ? 'Média' :
+                  'Baixa'}
                 </span>
               )}
             </div>

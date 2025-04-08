@@ -1,19 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types/supabase';
+import { createClient } from '@supabase/supabase-js'
 
-// Ensure environment variables are defined
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('URL do Supabase não encontrada')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    detectSessionInUrl: false,
-    autoRefreshToken: true,
-    storage: localStorage
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Chave anônima do Supabase não encontrada')
+}
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
   }
-});
+) 

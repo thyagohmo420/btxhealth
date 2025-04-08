@@ -1,316 +1,330 @@
-import React, { useState, useEffect } from 'react';
-import { usePatients } from '../contexts/PatientsContext';
-import { AlertTriangle, Clock, Heart, ThermometerSnowflake, Activity, Droplet, Check, X, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search } from 'lucide-react';
+import { usePatients } from '@/hooks/usePatients';
+import type { Patient, VitalSigns } from '@/types/patient';
+import type { Bed, NursingRecord } from '@/types/nursing';
+import { supabase } from '@/lib/supabaseConfig';
 
 export default function Nursing() {
-  const { 
-    patients,
-    updateVitalSigns,
-    addMedication,
-    administeredMedication,
-    addNursingRecord,
-    assignBed,
-    dischargeBed
-  } = usePatients();
-
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const [selectedBed, setSelectedBed] = useState<string | null>(null);
+  const { patients } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
-  const [beds, setBeds] = useState<any[]>([
-    // Exemplo de leitos pré-configurados
-    ...Array(10).fill(null).map((_, i) => ({
-      id: `bed-${i + 1}`,
-      number: `${i + 1}`,
-      type: 'regular',
-      status: 'available'
-    }))
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [beds] = useState<Bed[]>([
+    { id: '1', number: '101', sector: 'Enfermaria', status: 'available', created_at: '', updated_at: '' },
+    { id: '2', number: '102', sector: 'Enfermaria', status: 'available', created_at: '', updated_at: '' },
+    { id: '3', number: '103', sector: 'Enfermaria', status: 'available', created_at: '', updated_at: '' },
+    { id: '4', number: '104', sector: 'Enfermaria', status: 'available', created_at: '', updated_at: '' }
   ]);
 
-  // Filtrar pacientes em enfermaria ou aguardando leito
-  const nursingPatients = patients.filter(patient => 
-    (patient.status === 'in_nursing' || 
-     (patient.status === 'in_service' && patient.medicalRecord?.requiresHospitalization)) &&
-    (searchTerm === '' ||
-     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     patient.ticketNumber.includes(searchTerm))
+  const filteredPatients = patients.filter((patient: Patient) => 
+    (patient.status === 'in_progress' || patient.status === 'completed') &&
+    (patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.cpf.includes(searchTerm))
   );
 
-  const currentPatient = selectedPatient ? patients.find(p => p.id === selectedPatient) : null;
+  const handleUpdateVitalSigns = async (newVitalSigns: Partial<VitalSigns>) => {
+    if (!selectedPatient) return;
 
-  const handleVitalSignsUpdate = (patientId: string, newVitalSigns: any) => {
-    const isCritical = 
-      parseInt(newVitalSigns.temperature) > 38 ||
-      parseInt(newVitalSigns.heartRate) > 100 ||
-      parseInt(newVitalSigns.bloodPressure.split('/')[0]) > 140 ||
-      parseInt(newVitalSigns.saturation) < 95;
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({
+          vital_signs: {
+            ...selectedPatient.vital_signs,
+            ...newVitalSigns,
+            measuredAt: new Date().toISOString()
+          }
+        })
+        .eq('id', selectedPatient.id);
 
-    updateVitalSigns(patientId, {
-      ...newVitalSigns,
-      lastUpdate: new Date().toISOString(),
-      registeredBy: localStorage.getItem('userName') || 'Enfermeiro',
-      isCritical
-    });
-
-    if (isCritical) {
-      addNursingRecord(patientId, {
-        registeredBy: localStorage.getItem('userName') || 'Enfermeiro',
-        type: 'evolution',
-        description: 'ALERTA: Sinais vitais críticos detectados',
-        vitalSigns: newVitalSigns
-      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao atualizar sinais vitais:', error);
     }
   };
 
-  const handleAssignBed = (patientId: string, bedId: string) => {
-    assignBed(patientId, bedId);
-    addNursingRecord(patientId, {
-      registeredBy: localStorage.getItem('userName') || 'Enfermeiro',
+  const handleAddEvolution = async () => {
+    if (!selectedPatient) return;
+
+    const record: NursingRecord = {
+      id: crypto.randomUUID(),
+      type: 'evolution',
+      description: '',
+      registeredBy: 'Enfermeiro',
+      date: new Date().toISOString(),
+      vital_signs: selectedPatient.vital_signs,
+      severity: 'low',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const { error } = await supabase
+        .from('nursing_records')
+        .insert([record]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao adicionar evolução:', error);
+    }
+  };
+
+  const handleAdmitPatient = async (bedId: string) => {
+    if (!selectedPatient) return;
+
+    const record: NursingRecord = {
+      id: crypto.randomUUID(),
       type: 'admission',
-      description: `Paciente admitido no leito ${beds.find(b => b.id === bedId)?.number}`
-    });
+      description: `Paciente admitido no leito ${bedId}`,
+      registeredBy: 'Enfermeiro',
+      date: new Date().toISOString(),
+      severity: 'low',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const { error } = await supabase
+        .from('nursing_records')
+        .insert([record]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao admitir paciente:', error);
+    }
   };
 
-  const handleDischargeBed = (bedId: string) => {
-    const bed = beds.find(b => b.id === bedId);
-    if (bed?.currentPatientId) {
-      addNursingRecord(bed.currentPatientId, {
-        registeredBy: localStorage.getItem('userName') || 'Enfermeiro',
-        type: 'discharge',
-        description: `Alta do leito ${bed.number}`
-      });
-      dischargeBed(bedId);
+  const handleDischargePatient = async (bedId: string) => {
+    if (!selectedPatient) return;
+
+    const record: NursingRecord = {
+      id: crypto.randomUUID(),
+      type: 'discharge',
+      description: `Paciente recebeu alta do leito ${bedId}`,
+      registeredBy: 'Enfermeiro',
+      date: new Date().toISOString(),
+      severity: 'low',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const { error } = await supabase
+        .from('nursing_records')
+        .insert([record]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao dar alta ao paciente:', error);
     }
+  };
+
+  const formatBloodPressure = (systolic: number, diastolic: number) => {
+    return `${systolic}/${diastolic}`;
+  };
+
+  const parseBloodPressure = (value: string): { systolic: number; diastolic: number } => {
+    const [systolic, diastolic] = value.split('/').map(Number);
+    return { systolic, diastolic };
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-800">Enfermaria</h2>
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Buscar paciente..."
-            className="px-4 py-2 border rounded-lg"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button
-            onClick={() => setSearchTerm('')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Limpar
-          </button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Enfermagem</h1>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <div className="form-control flex-1">
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Buscar por nome ou CPF..."
+              className="input input-bordered w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="btn btn-square">
+              <Search className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* Lista de Pacientes */}
-        <div className="col-span-3 bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-medium mb-4">Pacientes</h3>
-          <div className="space-y-2">
-            {nursingPatients.map(patient => (
-              <div
-                key={patient.id}
-                className={`p-3 rounded-lg border cursor-pointer ${
-                  selectedPatient === patient.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-                onClick={() => setSelectedPatient(patient.id)}
-              >
-                <div className="font-medium">{patient.name}</div>
-                <div className="text-sm text-gray-500">Senha: {patient.ticketNumber}</div>
-                {patient.nursingHistory?.bedAssignments?.length ? (
-                  <div className="text-sm text-blue-600">
-                    Leito: {
-                      beds.find(b => 
-                        b.id === patient.nursingHistory?.bedAssignments.slice(-1)[0].bedId
-                      )?.number
-                    }
-                  </div>
-                ) : (
-                  <div className="text-sm text-yellow-600">Aguardando leito</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Detalhes do Paciente */}
-        <div className="col-span-6 space-y-4">
-          {currentPatient ? (
-            <>
-              {/* Sinais Vitais */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-medium mb-4">Sinais Vitais</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Pressão Arterial
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        value={currentPatient.vitalSigns?.bloodPressure || ''}
-                        onChange={(e) => handleVitalSignsUpdate(currentPatient.id, {
-                          ...currentPatient.vitalSigns,
-                          bloodPressure: e.target.value
-                        })}
-                      />
-                      <Activity className="text-gray-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Frequência Cardíaca
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        value={currentPatient.vitalSigns?.heartRate || ''}
-                        onChange={(e) => handleVitalSignsUpdate(currentPatient.id, {
-                          ...currentPatient.vitalSigns,
-                          heartRate: e.target.value
-                        })}
-                      />
-                      <Heart className="text-gray-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Temperatura
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        value={currentPatient.vitalSigns?.temperature || ''}
-                        onChange={(e) => handleVitalSignsUpdate(currentPatient.id, {
-                          ...currentPatient.vitalSigns,
-                          temperature: e.target.value
-                        })}
-                      />
-                      <ThermometerSnowflake className="text-gray-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Saturação
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                        value={currentPatient.vitalSigns?.saturation || ''}
-                        onChange={(e) => handleVitalSignsUpdate(currentPatient.id, {
-                          ...currentPatient.vitalSigns,
-                          saturation: e.target.value
-                        })}
-                      />
-                      <Droplet className="text-gray-400" />
-                    </div>
-                  </div>
-                </div>
-                {currentPatient.vitalSigns?.isCritical && (
-                  <div className="mt-4 p-3 bg-red-100 text-red-800 rounded-lg flex items-center gap-2">
-                    <AlertTriangle />
-                    Sinais vitais críticos detectados!
-                  </div>
-                )}
-                <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
-                  <Clock size={16} />
-                  Última atualização: {
-                    currentPatient.vitalSigns?.lastUpdate
-                      ? new Date(currentPatient.vitalSigns.lastUpdate).toLocaleString('pt-BR')
-                      : 'Nunca'
-                  }
-                </div>
-              </div>
-
-              {/* Histórico */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-medium mb-4">Histórico de Enfermagem</h3>
-                <div className="space-y-2">
-                  {currentPatient.nursingHistory?.nursingRecords.map((record, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{record.type}</span>
-                        <span className="text-sm text-gray-500">
-                          {new Date(record.date).toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      <p className="text-gray-600">{record.description}</p>
-                      <div className="text-sm text-gray-500">
-                        Por: {record.registeredBy}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="overflow-x-auto">
+          <table className="table w-full">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPatients.map((patient: Patient) => (
+                <tr key={patient.id}>
+                  <td>
+                    <div className="flex items-center space-x-3">
+                      <div>
+                        <div className="font-medium">{patient.full_name}</div>
+                        <div className="text-sm text-gray-500">CPF: {patient.cpf}</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">
-              Selecione um paciente para ver os detalhes
-            </div>
-          )}
+                  </td>
+                  <td>{patient.status}</td>
+                  <td>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setSelectedPatient(patient)}
+                    >
+                      Selecionar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Gestão de Leitos */}
-        <div className="col-span-3 bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-medium mb-4">Leitos</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {beds.map(bed => {
-              const occupyingPatient = patients.find(p => 
-                p.nursingHistory?.bedAssignments?.slice(-1)[0]?.bedId === bed.id &&
-                !p.nursingHistory?.bedAssignments?.slice(-1)[0]?.endDate
-              );
+        {selectedPatient && (
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">Sinais Vitais - {selectedPatient.full_name}</h2>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Pressão Arterial</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.bloodPressure ? 
+                        formatBloodPressure(
+                          selectedPatient.vital_signs.bloodPressure.systolic,
+                          selectedPatient.vital_signs.bloodPressure.diastolic
+                        ) : ''}
+                      onChange={(e) => {
+                        const bp = parseBloodPressure(e.target.value);
+                        handleUpdateVitalSigns({
+                          ...selectedPatient.vital_signs,
+                          bloodPressure: bp
+                        });
+                      }}
+                      placeholder="120/80"
+                    />
+                  </div>
+                </div>
 
-              return (
-                <div
-                  key={bed.id}
-                  className={`p-3 rounded-lg border ${
-                    selectedBed === bed.id
-                      ? 'border-blue-500'
-                      : 'border-gray-200'
-                  } ${
-                    bed.status === 'available'
-                      ? 'bg-green-50'
-                      : bed.status === 'occupied'
-                      ? 'bg-red-50'
-                      : 'bg-gray-50'
-                  }`}
-                  onClick={() => setSelectedBed(bed.id)}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Frequência Cardíaca</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.heartRate || ''}
+                      onChange={(e) => handleUpdateVitalSigns({
+                        ...selectedPatient.vital_signs,
+                        heartRate: Number(e.target.value)
+                      })}
+                      placeholder="80"
+                    />
+                    <span>bpm</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Frequência Respiratória</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.respiratoryRate || ''}
+                      onChange={(e) => handleUpdateVitalSigns({
+                        ...selectedPatient.vital_signs,
+                        respiratoryRate: Number(e.target.value)
+                      })}
+                      placeholder="16"
+                    />
+                    <span>rpm</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Temperatura</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.temperature || ''}
+                      onChange={(e) => handleUpdateVitalSigns({
+                        ...selectedPatient.vital_signs,
+                        temperature: Number(e.target.value)
+                      })}
+                      placeholder="36.5"
+                    />
+                    <span>°C</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Saturação de O2</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.oxygenSaturation || ''}
+                      onChange={(e) => handleUpdateVitalSigns({
+                        ...selectedPatient.vital_signs,
+                        oxygenSaturation: Number(e.target.value)
+                      })}
+                      placeholder="98"
+                    />
+                    <span>%</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Nível de Dor</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={selectedPatient.vital_signs?.painLevel || ''}
+                      onChange={(e) => handleUpdateVitalSigns({
+                        ...selectedPatient.vital_signs,
+                        painLevel: Number(e.target.value)
+                      })}
+                      placeholder="0"
+                    />
+                    <span>/10</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-actions justify-end mt-4">
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAddEvolution}
                 >
-                  <div className="font-medium">Leito {bed.number}</div>
-                  {occupyingPatient ? (
-                    <>
-                      <div className="text-sm text-gray-600">
-                        {occupyingPatient.name}
-                      </div>
-                      <button
-                        onClick={() => handleDischargeBed(bed.id)}
-                        className="mt-2 w-full px-2 py-1 bg-blue-600 text-white rounded text-sm"
-                      >
-                        Alta
-                      </button>
-                    </>
-                  ) : (
-                    currentPatient && (
-                      <button
-                        onClick={() => handleAssignBed(currentPatient.id, bed.id)}
-                        className="mt-2 w-full px-2 py-1 bg-green-600 text-white rounded text-sm"
-                      >
-                        Alocar
-                      </button>
-                    )
-                  )}
-                </div>
-              );
-            })}
+                  Adicionar Evolução
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

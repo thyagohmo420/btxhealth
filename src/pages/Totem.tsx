@@ -1,25 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Monitor, Bell } from 'lucide-react';
-import { calls } from '../lib/supabaseConfig';
+import { calls } from '../lib/calls';
 import { toast } from 'sonner';
 
 interface Call {
   id: string;
-  display_name: string;
-  room_number: string;
-  status: string;
-  priority: string;
-  called_at: string;
-  patient: {
-    full_name: string;
-    registration_number: string;
-  };
-  sector: {
-    name: string;
-  };
-  professional: {
-    full_name: string;
-  } | null;
+  patient_name: string;
+  status: 'waiting' | 'called' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  created_at: string;
+  updated_at: string;
+  room?: string;
 }
 
 export default function Totem() {
@@ -39,7 +30,7 @@ export default function Totem() {
         setActiveCalls(data);
         const newCall = data.find(call => 
           call.status === 'called' && 
-          (!lastCall || new Date(call.called_at) > new Date(lastCall.called_at))
+          (!lastCall || new Date(call.created_at) > new Date(lastCall.created_at))
         );
         
         if (newCall && (!lastCall || newCall.id !== lastCall.id)) {
@@ -59,7 +50,7 @@ export default function Totem() {
   };
 
   const showCallNotification = (call: Call) => {
-    const message = `${call.display_name} - ${call.sector.name}${call.room_number ? ` - Sala ${call.room_number}` : ''}`;
+    const message = `${call.patient_name} - ${call.room ? `Sala ${call.room}` : ''}`;
     toast.info(message, {
       duration: 5000,
       position: 'top-center'
@@ -90,11 +81,10 @@ export default function Totem() {
             <Bell className="w-6 h-6 text-yellow-500 mr-4" />
             <div>
               <h2 className="text-2xl font-bold text-yellow-800">
-                {lastCall.display_name}
+                {lastCall.patient_name}
               </h2>
               <p className="text-yellow-600">
-                {lastCall.sector.name}
-                {lastCall.room_number && ` - Sala ${lastCall.room_number}`}
+                {lastCall.room ? `Sala ${lastCall.room}` : ''}
               </p>
             </div>
           </div>
@@ -112,15 +102,14 @@ export default function Totem() {
               }`}
             >
               <h3 className="text-xl font-semibold text-gray-800">
-                {call.display_name}
+                {call.patient_name}
               </h3>
-              <p className="text-gray-600">{call.sector.name}</p>
-              {call.room_number && (
-                <p className="text-gray-600">Sala {call.room_number}</p>
+              {call.room && (
+                <p className="text-gray-600">Sala {call.room}</p>
               )}
-              {call.called_at && (
+              {call.created_at && (
                 <p className="text-sm text-gray-500 mt-2">
-                  Chamado às {formatTime(call.called_at)}
+                  Chamado às {formatTime(call.created_at)}
                 </p>
               )}
               <div className={`mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

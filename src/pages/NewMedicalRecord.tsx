@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { supabase } from '@/lib/supabaseClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface Patient {
   id: string;
@@ -25,7 +31,7 @@ interface FormData {
 }
 
 export default function NewMedicalRecord() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(false);
@@ -155,12 +161,12 @@ export default function NewMedicalRecord() {
       }
 
       if (record) {
-        alert('Registro criado com sucesso!');
-        navigate('/prontuario');
+        toast.success('Registro criado com sucesso!');
+        router.push('/prontuario');
       }
     } catch (err) {
       console.error('Erro completo:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao criar registro');
+      toast.error(err instanceof Error ? err.message : 'Erro ao criar registro');
     } finally {
       setLoading(false);
     }
@@ -168,148 +174,142 @@ export default function NewMedicalRecord() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Novo Registro</h1>
-        <button
-          onClick={() => navigate('/prontuario')}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-        >
-          Voltar
-        </button>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-2xl font-bold">Novo Registro</CardTitle>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/prontuario')}
+          >
+            Voltar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-2">
-            Paciente:
-            <select
-              name="patientId"
-              value={formData.patientId}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Selecione o paciente</option>
-              {patients.map(patient => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.full_name} - {patient.cpf}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label className="block mb-2">
-            Profissional:
-            <select
-              name="professionalId"
-              value={formData.professionalId}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Selecione o profissional</option>
-              {professionals.map(professional => (
-                <option key={professional.id} value={professional.id}>
-                  {professional.full_name} - {professional.specialty}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label className="block mb-2">
-            Tipo:
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="consultation">Consulta</option>
-              <option value="return">Retorno</option>
-              <option value="exam">Exame</option>
-              <option value="procedure">Procedimento</option>
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label className="block mb-2">
-            Observações:
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              rows={6}
-              required
-            />
-          </label>
-        </div>
-
-        {(formData.type === 'consultation' || formData.type === 'return') && (
-          <>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block mb-2">
-                Prescrição:
-                <textarea
-                  name="prescription"
-                  value={formData.prescription}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  rows={4}
-                />
+              <label className="block text-sm font-medium mb-2">
+                Paciente:
+                <Select
+                  name="patientId"
+                  value={formData.patientId}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'patientId', value } } as any)}
+                  required
+                >
+                  <option value="">Selecione o paciente</option>
+                  {patients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.full_name} - {patient.cpf}
+                    </option>
+                  ))}
+                </Select>
               </label>
             </div>
 
             <div>
-              <label className="block mb-2">
-                Solicitação de Exames:
-                <textarea
-                  name="exam_request"
-                  value={formData.exam_request}
+              <label className="block text-sm font-medium mb-2">
+                Profissional:
+                <Select
+                  name="professionalId"
+                  value={formData.professionalId}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'professionalId', value } } as any)}
+                  required
+                >
+                  <option value="">Selecione o profissional</option>
+                  {professionals.map(professional => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.full_name} - {professional.specialty}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Tipo:
+                <Select
+                  name="type"
+                  value={formData.type}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'type', value } } as any)}
+                  required
+                >
+                  <option value="consultation">Consulta</option>
+                  <option value="return">Retorno</option>
+                  <option value="exam">Exame</option>
+                  <option value="procedure">Procedimento</option>
+                </Select>
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Observações:
+                <Textarea
+                  name="notes"
+                  value={formData.notes}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  rows={4}
+                  rows={6}
+                  required
                 />
               </label>
             </div>
-          </>
-        )}
 
-        <div>
-          <label className="block mb-2">
-            Anexos:
-            <input
-              type="file"
-              onChange={handleFileChange}
-              multiple
-              className="w-full p-2 border rounded"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-          </label>
-        </div>
+            {(formData.type === 'consultation' || formData.type === 'return') && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Prescrição:
+                    <Textarea
+                      name="prescription"
+                      value={formData.prescription}
+                      onChange={handleInputChange}
+                      rows={4}
+                    />
+                  </label>
+                </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full p-2 text-white rounded ${
-            loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-          }`}
-        >
-          {loading ? 'Salvando...' : 'Salvar'}
-        </button>
-      </form>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Solicitação de Exames:
+                    <Textarea
+                      name="exam_request"
+                      value={formData.exam_request}
+                      onChange={handleInputChange}
+                      rows={4}
+                    />
+                  </label>
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Anexos:
+                <Input
+                  type="file"
+                  onChange={handleFileChange}
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileDown, Filter, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { reports } from '../lib/supabaseConfig';
+import { reports } from '../lib/reports';
 
 export default function Reports() {
   const [loading, setLoading] = useState(false);
@@ -36,12 +36,20 @@ export default function Reports() {
         filename = `relatorio_atendimentos_${format(new Date(), 'yyyy-MM-dd')}`;
       }
 
-      if (!data || data.length === 0) {
+      if (!data || !data.data || data.data.length === 0) {
         toast.error('Nenhum dado encontrado para o período selecionado');
         return;
       }
 
-      await reports.downloadReport(data, filename);
+      const blob = await reports.downloadReport(data.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       toast.success('Relatório gerado com sucesso');
     } catch (error) {
       console.error('Erro ao gerar relatório:', error);

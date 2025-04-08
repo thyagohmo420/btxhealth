@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
@@ -90,7 +90,7 @@ export default function DisplayPanel() {
       <div className="bg-blue-600 text-white py-4">
         <div className="container mx-auto text-center">
           <h1 className="text-3xl font-bold">Sistema de Chamadas</h1>
-          <p className="text-lg mt-2">Hospital BTX Health</p>
+          <p className="text-lg mt-2">Hospital de Juquitiba</p>
         </div>
       </div>
 

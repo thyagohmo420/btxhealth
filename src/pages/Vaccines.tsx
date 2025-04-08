@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Plus, Syringe, Calendar, User, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface Vaccine {

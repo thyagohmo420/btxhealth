@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Plus, Edit, Trash2, Filter, Clock, DollarSign } from 'lucide-react';
 
 interface Service {

@@ -43,49 +43,226 @@ export interface Database {
       }
       patients: {
         Row: {
-          id: string
-          full_name: string
-          cpf: string | null
-          rg: string | null
-          sus_card: string | null
-          birth_date: string | null
-          phone: string | null
-          email: string | null
-          address: Json | null
-          emergency_contact: Json | null
-          priority: string
-          created_at: string
-          updated_at: string
+          id: string;
+          name: string;
+          cpf: string;
+          susCard?: string;
+          phone?: string;
+          ticketNumber: string;
+          arrivalTime: string;
+          serviceStartTime?: string;
+          symptoms?: string;
+          vitalSigns?: {
+            temperature: string;
+            bloodPressure: string;
+            heartRate: string;
+            saturation: string;
+            lastUpdate?: string;
+            registeredBy?: string;
+            isAutomatic?: boolean;
+            isCritical?: boolean;
+          };
+          priority?: 'urgent' | 'priority' | 'normal';
+          status: 'waiting' | 'in_triage' | 'in_service' | 'in_nursing' | 'completed';
+          lastUpdate: string;
+          medicalRecord?: {
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+            requiresHospitalization?: boolean;
+          };
+          triageHistory?: {
+            date: string;
+            symptoms: string;
+            vitalSigns: {
+              temperature: string;
+              bloodPressure: string;
+              heartRate: string;
+              saturation: string;
+              lastUpdate?: string;
+              registeredBy?: string;
+              isAutomatic?: boolean;
+              isCritical?: boolean;
+            };
+            priority: 'urgent' | 'priority' | 'normal';
+            nurse?: string;
+          }[];
+          consultationHistory?: {
+            date: string;
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+          }[];
         }
         Insert: {
-          id?: string
-          full_name: string
-          cpf?: string | null
-          rg?: string | null
-          sus_card?: string | null
-          birth_date?: string | null
-          phone?: string | null
-          email?: string | null
-          address?: Json | null
-          emergency_contact?: Json | null
-          priority?: string
-          created_at?: string
-          updated_at?: string
+          id?: string;
+          name: string;
+          cpf: string;
+          susCard?: string;
+          phone?: string;
+          ticketNumber: string;
+          arrivalTime: string;
+          serviceStartTime?: string;
+          symptoms?: string;
+          vitalSigns?: {
+            temperature: string;
+            bloodPressure: string;
+            heartRate: string;
+            saturation: string;
+            lastUpdate?: string;
+            registeredBy?: string;
+            isAutomatic?: boolean;
+            isCritical?: boolean;
+          };
+          priority?: 'urgent' | 'priority' | 'normal';
+          status: 'waiting' | 'in_triage' | 'in_service' | 'in_nursing' | 'completed';
+          lastUpdate: string;
+          medicalRecord?: {
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+            requiresHospitalization?: boolean;
+          };
+          triageHistory?: {
+            date: string;
+            symptoms: string;
+            vitalSigns: {
+              temperature: string;
+              bloodPressure: string;
+              heartRate: string;
+              saturation: string;
+              lastUpdate?: string;
+              registeredBy?: string;
+              isAutomatic?: boolean;
+              isCritical?: boolean;
+            };
+            priority: 'urgent' | 'priority' | 'normal';
+            nurse?: string;
+          }[];
+          consultationHistory?: {
+            date: string;
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+          }[];
         }
         Update: {
-          id?: string
-          full_name?: string
-          cpf?: string | null
-          rg?: string | null
-          sus_card?: string | null
-          birth_date?: string | null
-          phone?: string | null
-          email?: string | null
-          address?: Json | null
-          emergency_contact?: Json | null
-          priority?: string
-          created_at?: string
-          updated_at?: string
+          id?: string;
+          name?: string;
+          cpf?: string;
+          susCard?: string;
+          phone?: string;
+          ticketNumber?: string;
+          arrivalTime?: string;
+          serviceStartTime?: string;
+          symptoms?: string;
+          vitalSigns?: {
+            temperature: string;
+            bloodPressure: string;
+            heartRate: string;
+            saturation: string;
+            lastUpdate?: string;
+            registeredBy?: string;
+            isAutomatic?: boolean;
+            isCritical?: boolean;
+          };
+          priority?: 'urgent' | 'priority' | 'normal';
+          status?: 'waiting' | 'in_triage' | 'in_service' | 'in_nursing' | 'completed';
+          lastUpdate?: string;
+          medicalRecord?: {
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+            requiresHospitalization?: boolean;
+          };
+          triageHistory?: {
+            date: string;
+            symptoms: string;
+            vitalSigns: {
+              temperature: string;
+              bloodPressure: string;
+              heartRate: string;
+              saturation: string;
+              lastUpdate?: string;
+              registeredBy?: string;
+              isAutomatic?: boolean;
+              isCritical?: boolean;
+            };
+            priority: 'urgent' | 'priority' | 'normal';
+            nurse?: string;
+          }[];
+          consultationHistory?: {
+            date: string;
+            symptoms: string;
+            diagnosis: string;
+            prescriptions: {
+              medication: string;
+              dosage: string;
+              frequency: string;
+              duration: string;
+            }[];
+            exams: {
+              name: string;
+              type: 'laboratory' | 'image';
+              instructions?: string;
+            }[];
+            doctor?: string;
+          }[];
         }
       }
       appointments: {
@@ -490,6 +667,38 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['reports']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['reports']['Insert']>
+      }
+      queue: {
+        Row: {
+          id: string;
+          numero: string;
+          setor: 'triagem' | 'consultorio1' | 'consultorio2';
+          prioridade: 'normal' | 'prioritario' | 'emergencia';
+          status: 'aguardando' | 'chamada' | 'finalizada';
+          paciente_id?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          numero: string;
+          setor: 'triagem' | 'consultorio1' | 'consultorio2';
+          prioridade: 'normal' | 'prioritario' | 'emergencia';
+          status: 'aguardando' | 'chamada' | 'finalizada';
+          paciente_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          numero?: string;
+          setor?: 'triagem' | 'consultorio1' | 'consultorio2';
+          prioridade?: 'normal' | 'prioritario' | 'emergencia';
+          status?: 'aguardando' | 'chamada' | 'finalizada';
+          paciente_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
       }
     }
   }

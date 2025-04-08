@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Download, Share2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 

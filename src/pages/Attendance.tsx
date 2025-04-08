@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,6 +22,26 @@ interface Attendance {
   id: string;
   patient: Patient;
   professional: Professional;
+  type: string;
+  notes: string;
+  attachments: string[];
+  status: string;
+  record_date: string;
+  created_at: string;
+}
+
+interface SupabaseAttendance {
+  id: string;
+  patient: {
+    id: string;
+    full_name: string;
+    cpf: string;
+  }[];
+  professional: {
+    id: string;
+    full_name: string;
+    specialty: string;
+  }[];
   type: string;
   notes: string;
   attachments: string[];
@@ -68,7 +88,27 @@ export default function Attendance() {
 
       if (error) throw error;
 
-      setAttendances(data || []);
+      const formattedData: Attendance[] = (data || []).map((item: SupabaseAttendance) => ({
+        id: item.id,
+        patient: {
+          id: item.patient[0].id,
+          full_name: item.patient[0].full_name,
+          cpf: item.patient[0].cpf
+        },
+        professional: {
+          id: item.professional[0].id,
+          full_name: item.professional[0].full_name,
+          specialty: item.professional[0].specialty
+        },
+        type: item.type,
+        notes: item.notes,
+        attachments: item.attachments,
+        status: item.status,
+        record_date: item.record_date,
+        created_at: item.created_at
+      }));
+
+      setAttendances(formattedData);
     } catch (error) {
       console.error('Erro ao carregar atendimentos:', error);
       toast.error('Erro ao carregar atendimentos');

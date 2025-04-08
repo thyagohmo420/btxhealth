@@ -5,7 +5,15 @@ import type { Database } from '../types/supabase';
 
 type Patient = Database['public']['Tables']['patients']['Row'];
 type Appointment = Database['public']['Tables']['appointments']['Row'];
-type Queue = Database['public']['Tables']['queue']['Row'];
+type Queue = {
+  id: string;
+  ticket_number: string;
+  priority: 'normal' | 'priority' | 'emergency';
+  sector: 'triage' | 'office1' | 'office2';
+  status: 'waiting' | 'called' | 'completed';
+  created_at: string;
+  updated_at: string;
+};
 
 interface AppState {
   // Estado global
@@ -30,7 +38,7 @@ interface AppState {
   queue: Queue[];
   fetchQueue: () => Promise<void>;
   addToQueue: (data: Omit<Queue, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateQueueStatus: (id: string, status: string) => Promise<void>;
+  updateQueueStatus: (id: string, status: Queue['status']) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

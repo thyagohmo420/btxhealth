@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -33,7 +33,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { signUp } = useAuthStore();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const {
     register,
@@ -72,7 +72,7 @@ export default function SignUp() {
       });
       
       toast.success('Conta criada com sucesso! Verifique seu email para confirmar o cadastro.');
-      navigate('/login');
+      router.push('/login');
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
       
@@ -271,7 +271,7 @@ export default function SignUp() {
             Já tem uma conta?{' '}
             <button
               type="button"
-              onClick={() => navigate('/login')}
+              onClick={() => router.push('/login')}
               className="text-blue-600 hover:text-blue-800"
             >
               Fazer login

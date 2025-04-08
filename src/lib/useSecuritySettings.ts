@@ -1,175 +1,156 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useEffect } from 'react';
 
 interface SecuritySettings {
-  minPasswordLength: number;
-  requireSpecialChars: boolean;
-  requireNumbers: boolean;
-  requireUppercase: boolean;
-  passwordExpiryDays: number;
+  requireTwoFactor: boolean;
+  passwordMinLength: number;
+  passwordRequireSpecialChar: boolean;
+  passwordRequireNumber: boolean;
+  passwordRequireUppercase: boolean;
+  sessionTimeout: number;
   maxLoginAttempts: number;
   lockoutDuration: number;
-  twoFactorRequired: boolean;
-  sessionTimeout: number;
-  passwordHistory: number;
 }
 
-interface SecuritySettingsStore extends SecuritySettings {
-  updateSettings: (settings: Partial<SecuritySettings>) => void;
-  resetToDefaults: () => void;
+interface SecurityState {
+  settings: SecuritySettings;
+  updateSettings: (newSettings: Partial<SecuritySettings>) => void;
 }
 
-const DEFAULT_SETTINGS: SecuritySettings = {
-  minPasswordLength: 8,
-  requireSpecialChars: true,
-  requireNumbers: true,
-  requireUppercase: true,
-  passwordExpiryDays: 90,
-  maxLoginAttempts: 5,
-  lockoutDuration: 15,
-  twoFactorRequired: false,
+const defaultSettings: SecuritySettings = {
+  requireTwoFactor: false,
+  passwordMinLength: 8,
+  passwordRequireSpecialChar: true,
+  passwordRequireNumber: true,
+  passwordRequireUppercase: true,
   sessionTimeout: 30,
-  passwordHistory: 3
+  maxLoginAttempts: 5,
+  lockoutDuration: 15
 };
 
-export const useSecuritySettings = create<SecuritySettingsStore>()(
+export const useSecuritySettings = create<SecurityState>()(
   persist(
     (set) => ({
-      ...DEFAULT_SETTINGS,
-      
+      settings: defaultSettings,
       updateSettings: (newSettings) => {
         set((state) => ({
-          ...state,
-          ...newSettings
+          settings: { ...state.settings, ...newSettings },
         }));
       },
-
-      resetToDefaults: () => {
-        set(DEFAULT_SETTINGS);
-      }
     }),
     {
       name: 'security-settings',
-      partialize: (state) => {
-        const { updateSettings, resetToDefaults, ...settings } = state;
-        return settings;
-      }
+      partialize: (state) => ({ settings: state.settings }),
     }
   )
 );
 
-// Hook para validação de senha baseado nas configurações
-export const usePasswordValidation = () => {
-  const settings = useSecuritySettings();
+export const validatePassword = (password: string): string[] => {
+  const { settings } = useSecuritySettings.getState();
+  const errors: string[] = [];
 
-  const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
+  if (password.length < settings.passwordMinLength) {
+    errors.push(`A senha deve ter pelo menos ${settings.passwordMinLength} caracteres`);
+  }
 
-    if (password.length < settings.minPasswordLength) {
-      errors.push(`A senha deve ter pelo menos ${settings.minPasswordLength} caracteres`);
-    }
+  if (settings.passwordRequireSpecialChar && !/[^A-Za-z0-9]/.test(password)) {
+    errors.push('A senha deve conter pelo menos um caractere especial');
+  }
 
-    if (settings.requireSpecialChars && !/[^A-Za-z0-9]/.test(password)) {
-      errors.push('A senha deve conter pelo menos um caractere especial');
-    }
+  if (settings.passwordRequireNumber && !/[0-9]/.test(password)) {
+    errors.push('A senha deve conter pelo menos um número');
+  }
 
-    if (settings.requireNumbers && !/[0-9]/.test(password)) {
-      errors.push('A senha deve conter pelo menos um número');
-    }
+  if (settings.passwordRequireUppercase && !/[A-Z]/.test(password)) {
+    errors.push('A senha deve conter pelo menos uma letra maiúscula');
+  }
 
-    if (settings.requireUppercase && !/[A-Z]/.test(password)) {
-      errors.push('A senha deve conter pelo menos uma letra maiúscula');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  };
-
-  return {
-    validatePassword,
-    settings
-  };
+  return errors;
 };
 
-// Hook para gerenciamento de tentativas de login
-export const useLoginAttempts = () => {
-  const settings = useSecuritySettings();
-  const attempts = new Map<string, { count: number; timestamp: number }>();
+interface LoginAttempt {
+  count: number;
+  timestamp: number;
+}
 
-  const checkLoginAttempt = (email: string): boolean => {
-    const now = Date.now();
-    const attempt = attempts.get(email) || { count: 0, timestamp: now };
+const loginAttempts = new Map<string, LoginAttempt>();
 
-    // Reseta tentativas após o período de bloqueio
+export const checkLoginAttempts = (username: string): boolean => {
+  const { settings } = useSecuritySettings.getState();
+  const now = Date.now();
+  const attempt = loginAttempts.get(username);
+
+  if (attempt) {
+    // Verifica se o período de bloqueio já passou
     if (now - attempt.timestamp > settings.lockoutDuration * 60 * 1000) {
-      attempts.set(email, { count: 1, timestamp: now });
+      loginAttempts.delete(username);
       return true;
     }
 
-    // Incrementa tentativas
-    attempt.count++;
-    attempt.timestamp = now;
-
+    // Verifica se excedeu o número máximo de tentativas
     if (attempt.count > settings.maxLoginAttempts) {
       return false;
     }
+  }
 
-    attempts.set(email, attempt);
-    return true;
-  };
-
-  const resetAttempts = (email: string) => {
-    attempts.delete(email);
-  };
-
-  const getRemainingAttempts = (email: string): number => {
-    const attempt = attempts.get(email);
-    if (!attempt) return settings.maxLoginAttempts;
-    return Math.max(0, settings.maxLoginAttempts - attempt.count);
-  };
-
-  return {
-    checkLoginAttempt,
-    resetAttempts,
-    getRemainingAttempts
-  };
+  return true;
 };
 
-// Hook para gerenciamento de sessão
-export const useSessionTimeout = () => {
-  const settings = useSecuritySettings();
+export const getRemainingAttempts = (username: string): number => {
+  const { settings } = useSecuritySettings.getState();
+  const attempt = loginAttempts.get(username);
 
-  const startSessionTimer = (onTimeout: () => void) => {
+  if (!attempt) return settings.maxLoginAttempts;
+  return Math.max(0, settings.maxLoginAttempts - attempt.count);
+};
+
+export const recordLoginAttempt = (username: string, success: boolean): void => {
+  const now = Date.now();
+  const attempt = loginAttempts.get(username) || { count: 0, timestamp: now };
+
+  if (success) {
+    loginAttempts.delete(username);
+  } else {
+    loginAttempts.set(username, {
+      count: attempt.count + 1,
+      timestamp: now,
+    });
+  }
+};
+
+export const useSessionTimeout = (onTimeout: () => void) => {
+  const { settings } = useSecuritySettings.getState();
+
+  useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
+    const resetTimeout = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       timeoutId = setTimeout(onTimeout, settings.sessionTimeout * 60 * 1000);
     };
 
-    const cleanup = () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('click', resetTimer);
-      window.removeEventListener('scroll', resetTimer);
-      window.removeEventListener('touchstart', resetTimer);
+    const handleActivity = () => {
+      resetTimeout();
     };
 
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keydown', resetTimer);
-    window.addEventListener('click', resetTimer);
-    window.addEventListener('scroll', resetTimer);
-    window.addEventListener('touchstart', resetTimer);
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
 
-    resetTimer();
+    resetTimeout();
 
-    return cleanup;
-  };
-
-  return {
-    startSessionTimer
-  };
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+    };
+  }, [settings.sessionTimeout, onTimeout]);
 }; 

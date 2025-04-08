@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 interface Patient {
   id: string;
@@ -84,20 +84,13 @@ export default function NewPrescriptionModal({ isOpen, onClose, onSubmit }: NewP
       if (professionalsError) throw professionalsError;
 
       // Formatar dados dos pacientes (removendo duplicatas)
-      const uniquePatients = Array.from(
-        new Map(
-          triageData
-            .filter((item: any) => item.patient)
-            .map((item: any) => [
-              item.patient.id,
-              {
-                id: item.patient.id,
-                full_name: item.patient.full_name,
-                cpf: item.patient.cpf
-              }
-            ])
-        ).values()
-      );
+      const uniquePatients = triageData
+        ?.filter((item: any) => item.patient)
+        .map((item: any) => ({
+          id: item.patient.id,
+          full_name: item.patient.full_name,
+          cpf: item.patient.cpf
+        })) || [];
 
       setPatients(uniquePatients);
       setProfessionals(professionalsData || []);

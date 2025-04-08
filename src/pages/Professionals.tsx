@@ -1,17 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { UserPlus, Search, Pencil, Trash, User } from 'lucide-react';
-
-interface Professional {
-  id: string;
-  name: string;
-  crm?: string;
-  coren?: string;
-  specialization: string;
-  role: 'doctor' | 'nurse' | 'receptionist' | 'admin';
-  phone: string;
-  email: string;
-  status: 'active' | 'inactive';
-}
+import { Professional } from '@/types/professional';
 
 const STORAGE_KEY = '@HospitalJuquitiba:professionals';
 
@@ -23,15 +12,16 @@ export default function Professionals() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [editingProfessional, setEditingProfessional] = useState<Professional | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    crm: '',
-    coren: '',
-    specialization: '',
-    role: 'doctor',
-    phone: '',
+  const [formData, setFormData] = useState<Omit<Professional, 'id'>>({
+    full_name: '',
     email: '',
-    status: 'active'
+    phone: '',
+    role: 'doctor',
+    specialization: '',
+    registration_number: '',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   });
 
   useEffect(() => {
@@ -42,47 +32,41 @@ export default function Professionals() {
     e.preventDefault();
 
     if (editingProfessional) {
-      setProfessionals(prevProfessionals =>
-        prevProfessionals.map(p =>
-          p.id === editingProfessional.id
-            ? { ...formData, id: editingProfessional.id }
-            : p
-        )
-      );
+      handleUpdateProfessional(editingProfessional.id, formData);
       setEditingProfessional(null);
     } else {
-      setProfessionals(prevProfessionals => [
-        ...prevProfessionals,
-        {
-          ...formData,
-          id: crypto.randomUUID()
-        }
-      ]);
+      const newProfessional: Professional = {
+        ...formData,
+        id: crypto.randomUUID()
+      };
+      handleAddProfessional(newProfessional);
     }
 
     setFormData({
-      name: '',
-      crm: '',
-      coren: '',
-      specialization: '',
-      role: 'doctor',
-      phone: '',
+      full_name: '',
       email: '',
-      status: 'active'
+      phone: '',
+      role: 'doctor',
+      specialization: '',
+      registration_number: '',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
   };
 
   const handleEdit = (professional: Professional) => {
     setEditingProfessional(professional);
     setFormData({
-      name: professional.name,
-      crm: professional.crm || '',
-      coren: professional.coren || '',
-      specialization: professional.specialization,
-      role: professional.role,
-      phone: professional.phone,
+      full_name: professional.full_name,
       email: professional.email,
-      status: professional.status
+      phone: professional.phone,
+      role: professional.role,
+      specialization: professional.specialization,
+      registration_number: professional.registration_number || '',
+      status: professional.status,
+      created_at: professional.created_at,
+      updated_at: professional.updated_at
     });
   };
 
@@ -94,11 +78,27 @@ export default function Professionals() {
     }
   };
 
+  const handleUpdateProfessional = (id: string, data: Partial<Professional>) => {
+    setProfessionals(prevProfessionals =>
+      prevProfessionals.map(p =>
+        p.id === id
+          ? { ...p, ...data, updated_at: new Date().toISOString() }
+          : p
+      )
+    );
+  };
+
+  const handleAddProfessional = (data: Professional) => {
+    setProfessionals(prevProfessionals => [
+      ...prevProfessionals,
+      data
+    ]);
+  };
+
   const filteredProfessionals = professionals.filter(professional =>
-    professional.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    professional.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (professional.crm && professional.crm.includes(searchTerm)) ||
-    (professional.coren && professional.coren.includes(searchTerm))
+    professional.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    professional.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (professional.registration_number && professional.registration_number.includes(searchTerm))
   );
 
   return (
@@ -118,8 +118,8 @@ export default function Professionals() {
                 type="text"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                value={formData.full_name}
+                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
 
@@ -136,7 +136,7 @@ export default function Professionals() {
                 <option value="doctor">Médico</option>
                 <option value="nurse">Enfermeiro</option>
                 <option value="receptionist">Recepcionista</option>
-                <option value="admin">Administrador</option>
+                <option value="other">Outro</option>
               </select>
             </div>
 
@@ -149,8 +149,8 @@ export default function Professionals() {
                   type="text"
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  value={formData.crm}
-                  onChange={e => setFormData({ ...formData, crm: e.target.value })}
+                  value={formData.registration_number}
+                  onChange={e => setFormData({ ...formData, registration_number: e.target.value })}
                 />
               </div>
             )}
@@ -164,8 +164,8 @@ export default function Professionals() {
                   type="text"
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  value={formData.coren}
-                  onChange={e => setFormData({ ...formData, coren: e.target.value })}
+                  value={formData.registration_number}
+                  onChange={e => setFormData({ ...formData, registration_number: e.target.value })}
                 />
               </div>
             )}
@@ -251,74 +251,76 @@ export default function Professionals() {
             </div>
           </div>
 
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Função</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registro</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredProfessionals.map((professional) => (
-                <tr key={professional.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <User className="h-6 w-6 text-gray-500" />
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Profissional
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contato
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredProfessionals.map((professional) => (
+                  <tr key={professional.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-gray-500" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{professional.full_name}</div>
+                          <div className="text-sm text-gray-500">
+                            {professional.role === 'doctor' && 'Médico'}
+                            {professional.role === 'nurse' && 'Enfermeiro'}
+                            {professional.role === 'receptionist' && 'Recepcionista'}
+                            {professional.role === 'other' && 'Outro'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {professional.registration_number && `Registro: ${professional.registration_number}`}
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{professional.name}</div>
-                        <div className="text-sm text-gray-500">{professional.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {professional.role === 'doctor' && 'Médico'}
-                      {professional.role === 'nurse' && 'Enfermeiro'}
-                      {professional.role === 'receptionist' && 'Recepcionista'}
-                      {professional.role === 'admin' && 'Administrador'}
-                    </div>
-                    <div className="text-sm text-gray-500">{professional.specialization}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {professional.crm && `CRM: ${professional.crm}`}
-                    {professional.coren && `COREN: ${professional.coren}`}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      professional.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {professional.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{professional.email}</div>
+                      <div className="text-sm text-gray-500">{professional.phone}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        professional.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {professional.status === 'active' ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleEdit(professional)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
                       >
-                        <Pencil className="w-5 h-5" />
+                        <Pencil className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(professional.id)}
                         className="text-red-600 hover:text-red-900"
                       >
-                        <Trash className="w-5 h-5" />
+                        <Trash className="h-5 w-5" />
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

@@ -1,17 +1,34 @@
-export type SenhaStatus = 'Aguardando' | 'Em Atendimento' | 'Atendido' | 'Cancelado';
-export type SetorTipo = 'Recepção' | 'Triagem' | 'Consultório' | 'Enfermagem';
-export type Prioridade = 'normal' | 'prioritario' | 'emergencia';
+import type { Patient, VitalSigns } from './patient';
+
+export type SetorTipo = 'triagem' | 'consultorio1' | 'consultorio2';
+export type SenhaStatus = 'aguardando' | 'chamado' | 'atendido' | 'cancelado';
+export type PrioridadeTipo = 'normal' | 'priority' | 'urgent'; // Azul (normal), Amarelo (priority), Vermelho (urgent)
 
 export interface Senha {
     id: string;
-    numero: number;
-    status: 'aguardando' | 'em_atendimento' | 'finalizado';
-    setor: 'triagem' | 'consultorio1' | 'consultorio2';
-    prioridade: 'normal' | 'prioritario' | 'emergencia';
+    number: string;
+    sector: SetorTipo;
+    status: SenhaStatus;
+    priority: PrioridadeTipo;
+    patient_id?: string;
     created_at: string;
     updated_at: string;
 }
 
+export interface Prescription {
+    medication: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+}
+
+export interface Exam {
+    name: string;
+    type: 'laboratory' | 'image';
+    instructions?: string;
+}
+
+// Respostas da API
 export interface GerarSenhaResponse {
     success: boolean;
     id?: number;
@@ -36,9 +53,9 @@ export interface FinalizarAtendimentoResponse {
 export interface SenhaResponse {
     id: string;
     numero: number;
-    status: string;
-    setor: string;
-    prioridade: string;
+    status: SenhaStatus;
+    setor: SetorTipo;
+    prioridade: PrioridadeTipo;
     created_at: string;
     updated_at: string;
 } 

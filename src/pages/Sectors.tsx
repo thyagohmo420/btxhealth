@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2, Search, Pencil, Trash } from 'lucide-react';
 
 interface Sector {
   id: string;
   name: string;
   description: string;
+  type: string;
   capacity: number;
+  manager: string;
   status: 'active' | 'inactive' | 'maintenance';
-  responsible?: string;
+  schedule: string;
+  staff: number;
+  occupancy: number;
 }
 
 const STORAGE_KEY = '@HospitalJuquitiba:sectors';
@@ -20,12 +24,17 @@ export default function Sectors() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [editingSector, setEditingSector] = useState<Sector | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Sector>({
+    id: '',
     name: '',
     description: '',
+    type: '',
     capacity: 0,
-    status: 'active' as const,
-    responsible: ''
+    manager: '',
+    status: 'active',
+    schedule: '',
+    staff: 0,
+    occupancy: 0
   });
 
   useEffect(() => {
@@ -34,43 +43,50 @@ export default function Sectors() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const newSector: Sector = {
+      ...formData,
+      id: editingSector ? editingSector.id : crypto.randomUUID()
+    };
 
     if (editingSector) {
       setSectors(prevSectors =>
         prevSectors.map(s =>
-          s.id === editingSector.id
-            ? { ...formData, id: editingSector.id }
-            : s
+          s.id === editingSector.id ? newSector : s
         )
       );
       setEditingSector(null);
     } else {
-      setSectors(prevSectors => [
-        ...prevSectors,
-        {
-          ...formData,
-          id: crypto.randomUUID()
-        }
-      ]);
+      setSectors(prevSectors => [...prevSectors, newSector]);
     }
 
     setFormData({
+      id: '',
       name: '',
       description: '',
+      type: '',
       capacity: 0,
+      manager: '',
       status: 'active',
-      responsible: ''
+      schedule: '',
+      staff: 0,
+      occupancy: 0
     });
   };
 
   const handleEdit = (sector: Sector) => {
     setEditingSector(sector);
     setFormData({
+      id: sector.id,
       name: sector.name,
       description: sector.description,
+      type: sector.type,
       capacity: sector.capacity,
+      manager: sector.manager,
       status: sector.status,
-      responsible: sector.responsible || ''
+      schedule: sector.schedule,
+      staff: sector.staff,
+      occupancy: sector.occupancy
     });
   };
 
@@ -109,7 +125,7 @@ export default function Sectors() {
   const filteredSectors = sectors.filter(sector =>
     sector.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sector.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (sector.responsible && sector.responsible.toLowerCase().includes(searchTerm.toLowerCase()))
+    (sector.manager && sector.manager.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -167,8 +183,8 @@ export default function Sectors() {
               <input
                 type="text"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                value={formData.responsible}
-                onChange={e => setFormData({ ...formData, responsible: e.target.value })}
+                value={formData.manager}
+                onChange={e => setFormData({ ...formData, manager: e.target.value })}
               />
             </div>
 
@@ -237,7 +253,7 @@ export default function Sectors() {
                     {sector.capacity} leitos
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {sector.responsible || '-'}
+                    {sector.manager || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(sector.status)}`}>

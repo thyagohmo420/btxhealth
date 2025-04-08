@@ -6,9 +6,9 @@ async function createInstaller() {
     appDirectory: resolve(__dirname, '../dist-electron/win-unpacked'),
     outputDirectory: resolve(__dirname, '../dist-electron/installer'),
     description: 'Sistema de Gestão para Unidades de Saúde',
-    exe: 'BTx Health',
-    name: 'BTx Health',
-    manufacturer: 'BTx Health',
+    exe: 'Hospital de Juquitiba',
+    name: 'Hospital de Juquitiba',
+    manufacturer: 'Hospital de Juquitiba',
     version: '1.0.0',
     ui: {
       chooseDirectory: true

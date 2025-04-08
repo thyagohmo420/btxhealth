@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { useAuthStore } from '../lib/auth';
 
 export default function ResetPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { resetPassword } = useAuthStore();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,7 +14,7 @@ export default function ResetPassword() {
 
     try {
       await resetPassword(email);
-      navigate('/login');
+      router.push('/login');
     } catch (error) {
       console.error('Reset password error:', error);
     } finally {
@@ -59,7 +59,7 @@ export default function ResetPassword() {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => navigate('/login')}
+              onClick={() => router.push('/login')}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               Voltar para o Login

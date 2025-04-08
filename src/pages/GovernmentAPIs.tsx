@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Globe, Shield, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
