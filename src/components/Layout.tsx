@@ -15,29 +15,39 @@ import {
 } from './ui/dropdown-menu'
 import { Button } from './ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
 }
 
+const getInitials = (name: string | null | undefined): string => {
+  if (!name) return 'U'
+  
+  const names = name.split(' ')
+  if (names.length === 1) return names[0].charAt(0).toUpperCase()
+  
+  return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase()
+}
+
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2)
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/login')
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+    }
   }
-
-  const userInitials = user ? getInitials(user.name) : 'U'
 
   // Mapear papéis para nomes legíveis em português
   const roleLabels: Record<string, string> = {
@@ -52,13 +62,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar para desktop */}
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white shadow-lg transition-transform duration-300 md:translate-x-0 flex flex-col ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex h-16 items-center justify-between px-4 shrink-0">
-          <h1 className="text-xl font-bold">BTX Health</h1>
+        <div className="flex h-16 items-center justify-between px-4 shrink-0 border-b">
+          <h1 className="text-xl font-bold">Hospital de Juquitiba</h1>
           <button
             className="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
             onClick={toggleSidebar}
@@ -71,10 +81,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </aside>
 
-      {/* Conteúdo principal */}
-      <div className="flex w-full flex-1 flex-col md:ml-64">
+      {/* Área principal */}
+      <div className="flex flex-1 flex-col w-full md:pl-64">
         {/* Header */}
-        <header className="z-10 flex h-16 items-center justify-between bg-white px-4 shadow-sm">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-white px-4 shadow-sm">
           <button
             className="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
             onClick={toggleSidebar}
@@ -92,7 +102,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
                     <AvatarImage src="" alt={user?.name || ""} />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
+                    <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -107,11 +117,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Perfil</DropdownMenuItem>
-                <DropdownMenuItem>Configurações</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="text-red-600">
-                  Sair
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                  <LogOut size={16} className="mr-2" />
+                  <span>Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -119,12 +127,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Conteúdo da página */}
-        <main className="flex-1 overflow-y-auto p-4">
-          {children}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6 lg:p-8">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:p-8 min-h-[calc(100vh-7rem)]">
+              {children}
+            </div>
+          </div>
         </main>
       </div>
 
-      {/* Overlay de fundo quando o sidebar está aberto no mobile */}
+      {/* Overlay mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"

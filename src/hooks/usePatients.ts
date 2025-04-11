@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseConfig';
 import { toast } from 'sonner';
 import { Patient } from '@/types/patient';
+import { PatientsContextType } from '@/types/context';
 
-export function usePatients() {
+export function usePatients(): PatientsContextType {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,12 +112,14 @@ export function usePatients() {
         prev.map(p => (p.id === id ? { ...p, ...updates } : p))
       );
       
-      if (updates.status === 'waiting_consultation') {
-        toast.success('Paciente encaminhado para consulta!');
+      if (updates.status === 'waiting') {
+        toast.success('Paciente na fila de espera!');
       } else if (updates.status === 'in_progress') {
         toast.success('Consulta iniciada!');
       } else if (updates.status === 'completed') {
         toast.success('Consulta finalizada com sucesso!');
+      } else if (updates.status === 'cancelled') {
+        toast.success('Consulta cancelada!');
       } else {
         toast.success('Paciente atualizado com sucesso!');
       }
@@ -150,6 +153,36 @@ export function usePatients() {
     }
   }
 
+  async function addMedicalRecord(patientId: string, recordData: any) {
+    try {
+      setError(null);
+      const { data, error } = await supabase
+        .from('medical_records')
+        .insert([{ ...recordData, patient_id: patientId, created_at: new Date().toISOString() }])
+        .select();
+
+      if (error) throw error;
+
+      // Atualizar o paciente com o novo registro médico
+      const patient = patients.find(p => p.id === patientId);
+      if (patient) {
+        const updatedPatient = {
+          ...patient,
+          medical_records: [...(patient.medical_records || []), data[0]]
+        };
+        setPatients(prev => prev.map(p => p.id === patientId ? updatedPatient : p));
+      }
+
+      toast.success('Registro médico adicionado com sucesso!');
+      return data?.[0];
+    } catch (err) {
+      console.error('Erro ao adicionar registro médico:', err);
+      setError('Não foi possível adicionar o registro médico');
+      toast.error('Erro ao adicionar registro médico');
+      throw err;
+    }
+  }
+
   return {
     patients,
     loading,
@@ -157,6 +190,7 @@ export function usePatients() {
     createPatient,
     updatePatient,
     deletePatient,
-    refreshPatients: fetchPatients
+    refreshPatients: fetchPatients,
+    addMedicalRecord
   };
 } 

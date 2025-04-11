@@ -13,7 +13,8 @@ export default function UserAccessSummary() {
     farmacia: 'Farmácia',
     financeiro: 'Financeiro',
     rh: 'Recursos Humanos',
-    admin: 'Administrador'
+    admin: 'Administrador',
+    laboratorio: 'Laboratório'
   };
 
   // Descrições das funções de cada tipo de acesso
@@ -24,7 +25,8 @@ export default function UserAccessSummary() {
     farmacia: 'Dispensação de medicamentos, controle de estoque e registro de medicamentos',
     financeiro: 'Gestão financeira, faturamento, pagamentos e relatórios financeiros',
     rh: 'Gestão de colaboradores, folha de pagamento e processos de RH',
-    admin: 'Acesso administrativo completo ao sistema, incluindo configurações e gerenciamento de usuários'
+    admin: 'Acesso administrativo completo ao sistema, incluindo configurações e gerenciamento de usuários',
+    laboratorio: 'Realização de exames laboratoriais, registro de resultados e gestão de amostras'
   };
 
   // Módulos principais por tipo de acesso
@@ -35,7 +37,8 @@ export default function UserAccessSummary() {
     farmacia: ['pharmacy'],
     financeiro: ['financial', 'reports'],
     rh: ['hr', 'reports'],
-    admin: ['admin', 'reception', 'triage', 'medicalOffice', 'pharmacy', 'financial', 'hr', 'patients', 'reports']
+    admin: ['admin', 'reception', 'triage', 'medicalOffice', 'pharmacy', 'financial', 'hr', 'patients', 'reports'],
+    laboratorio: ['laboratory', 'patients']
   };
 
   return (

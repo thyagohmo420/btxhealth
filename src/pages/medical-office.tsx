@@ -58,7 +58,7 @@ export default function MedicalOffice() {
   // Filtrar pacientes que estão aguardando ou em consulta
   const filteredPatients = patients.filter((patient: Patient) => {
     console.log("Verificando paciente:", patient.full_name, "Status:", patient.status, "Prioridade:", patient.priority);
-    return (patient.status === 'waiting_consultation' || patient.status === 'in_progress') &&
+    return (patient.status === 'waiting' || patient.status === 'in_progress') &&
       (patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.cpf.includes(searchTerm));
   });
@@ -417,15 +417,15 @@ export default function MedicalOffice() {
                       </td>
                       <td>
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          patient.status === 'waiting_consultation' ? 'bg-green-100 text-green-800' : 
+                          patient.status === 'waiting' ? 'bg-green-100 text-green-800' : 
                           patient.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : ''
                         }`}>
-                          {patient.status === 'waiting_consultation' ? 'Aguardando' : 
+                          {patient.status === 'waiting' ? 'Aguardando' : 
                            patient.status === 'in_progress' ? 'Em Consulta' : patient.status}
                         </span>
                       </td>
                       <td>
-                        {patient.status === 'waiting_consultation' ? (
+                        {patient.status === 'waiting' ? (
                           <button
                             className="btn btn-primary btn-sm"
                             onClick={() => handleStartConsultation(patient)}

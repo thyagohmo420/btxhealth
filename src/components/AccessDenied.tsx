@@ -11,13 +11,14 @@ interface AccessDeniedProps {
 
 const AccessDenied: React.FC<AccessDeniedProps> = ({ userRole }) => {
   // Mapear funções para páginas iniciais padrão
-  const roleHomePages: Record<UserRole, string> = {
+  const roleHomePages = {
     medico: '/medical-office',
     recepcao: '/reception',
     enfermagem: '/triage',
     farmacia: '/pharmacy',
     financeiro: '/financial',
     rh: '/hr',
+    laboratorio: '/laboratory',
     admin: '/dashboard'
   }
 

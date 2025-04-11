@@ -72,7 +72,7 @@ interface Medication {
 }
 
 export default function MedicationManagement() {
-  const { user, isLoading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('pendentes')
@@ -210,10 +210,10 @@ export default function MedicationManagement() {
   ])
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!loading && !user) {
       router.push('/login')
     }
-  }, [user, isLoading, router])
+  }, [user, loading, router])
 
   const handlePatientSelect = (patient: Patient) => {
     setSelectedPatient(patient)
@@ -292,7 +292,7 @@ export default function MedicationManagement() {
     patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

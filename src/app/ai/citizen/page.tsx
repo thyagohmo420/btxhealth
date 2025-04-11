@@ -112,7 +112,7 @@ export default function AICitizen() {
                           solicitacao.status === 'Pendente' ? 'outline' :
                           solicitacao.status === 'Em análise' ? 'secondary' :
                           solicitacao.status === 'Respondido' ? 'default' :
-                          'success'
+                          'outline'
                         }>
                           {solicitacao.status}
                         </Badge>

@@ -232,7 +232,7 @@ export default function MedicalHistory() {
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {new Date(entry.date).toLocaleString()}
+                        {entry.date ? new Date(entry.date).toLocaleString() : 'Data não disponível'}
                       </div>
                       <div>{entry.facility}</div>
                     </div>
@@ -278,7 +278,7 @@ export default function MedicalHistory() {
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {new Date(entry.date).toLocaleString()}
+                        {entry.date ? new Date(entry.date).toLocaleString() : 'Data não disponível'}
                       </div>
                       <div>{entry.facility}</div>
                     </div>
@@ -323,7 +323,7 @@ export default function MedicalHistory() {
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {new Date(entry.date).toLocaleString()}
+                        {entry.date ? new Date(entry.date).toLocaleString() : 'Data não disponível'}
                       </div>
                     </div>
                     {entry.attachments && (

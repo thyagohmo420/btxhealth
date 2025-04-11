@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, FileText, Upload, FilePlus, Pills, TestTube, Clipboard, Save, Plus } from 'lucide-react';
+import { Search, FileText, Upload, FilePlus, Pill, TestTube, Clipboard, Save, Plus } from 'lucide-react';
 import { usePatients } from '@/hooks/usePatients';
 import type { Patient, VitalSigns, ConsultationHistory, Exam } from '@/types/patient';
 import { supabase } from '@/lib/supabaseConfig';
@@ -42,7 +42,7 @@ export default function MedicalOffice() {
   const medicalCertificateRef = useRef<HTMLInputElement>(null);
 
   const filteredPatients = patients.filter((patient: Patient) => 
-    (patient.status === 'waiting_consultation' || patient.status === 'in_progress') &&
+    (patient.status === 'waiting' || patient.status === 'in_progress') &&
     (patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.cpf.includes(searchTerm))
   );
@@ -409,7 +409,7 @@ export default function MedicalOffice() {
                   className={`tab tab-bordered ${activeTab === 'prescriptions' ? 'tab-active' : ''}`}
                   onClick={() => setActiveTab('prescriptions')}
                 >
-                  <Pills className="w-4 h-4 mr-2" /> Medicamentos
+                  <Pill className="w-4 h-4 mr-2" /> Medicamentos
                 </a>
                 <a 
                   className={`tab tab-bordered ${activeTab === 'exams' ? 'tab-active' : ''}`}
@@ -459,10 +459,10 @@ export default function MedicalOffice() {
                         selectedPatient.consultation_history.map((consultation: ConsultationHistory, index) => (
                           <div key={index} className="card bg-base-100 shadow-sm p-4 mb-4">
                             <h4 className="font-bold">Consulta {index + 1}</h4>
-                            <p><strong>Sintomas:</strong> {consultation.symptoms.join(', ')}</p>
+                            <p><strong>Sintomas:</strong> {consultation.symptoms}</p>
                             <p><strong>Diagnóstico:</strong> {consultation.diagnosis}</p>
                             <p><strong>Tratamento:</strong> {consultation.treatment}</p>
-                            <p><strong>Data:</strong> {new Date(consultation.created_at).toLocaleString()}</p>
+                            <p><strong>Data:</strong> {consultation.created_at ? new Date(consultation.created_at).toLocaleString() : 'Data não disponível'}</p>
                           </div>
                         ))
                       ) : (
@@ -564,7 +564,7 @@ export default function MedicalOffice() {
                     {prescriptions.length === 0 && (
                       <div className="alert">
                         <div>
-                          <Pills className="w-6 h-6" />
+                          <Pill className="w-6 h-6" />
                           <span>Nenhum medicamento prescrito. Adicione medicamentos à prescrição.</span>
                         </div>
                       </div>

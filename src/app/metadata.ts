@@ -1,8 +1,8 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Hospital de Juquitiba',
-  description: 'Sistema de Gestão de Saúde',
+  description: 'Sistema de Gestão Hospitalar',
   icons: {
     icon: '/favicon.ico',
   },

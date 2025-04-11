@@ -107,7 +107,10 @@ export default function Reception() {
 
   const handleSendToTriage = async (patientId: string) => {
     try {
-      await updatePatient(patientId, { status: 'waiting_triage' })
+      await updatePatient(patientId, { 
+        status: 'waiting' as PatientStatus,
+        notes: (patients.find(p => p.id === patientId)?.notes || '') + '\nSENT_TO_TRIAGE:true'
+      })
       toast.success('Paciente enviado para triagem')
       // Atualizar lista de pacientes
       await refreshPatients();
@@ -223,11 +226,10 @@ export default function Reception() {
   }
 
   // Filtrar pacientes que podem estar na recepção usando uma abordagem segura
-  const receptionPatients = patients.filter(p => {
-    // Use `as string` para tratar o status como string e evitar erros de tipagem
-    const status = p.status as string; 
-    return status === 'waiting' || status === 'reception' || status === 'waiting_triage';
-  });
+  const receptionPatients = patients.filter(p => 
+    p.status === 'waiting' && 
+    !p.notes?.includes('SENT_TO_TRIAGE:true')
+  );
   
   const filteredPatients = receptionPatients.filter(patient =>
     patient.full_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -335,7 +337,11 @@ export default function Reception() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-yellow-600">
-              {patients.filter(p => p.status === 'in_progress').length}
+              {patients.filter(p => 
+                p.status === 'waiting' && 
+                p.notes?.includes('SENT_TO_TRIAGE:true') && 
+                !p.notes?.includes('TRIAGE_COMPLETED:true')
+              ).length}
             </p>
           </CardContent>
         </Card>
@@ -347,7 +353,11 @@ export default function Reception() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-blue-600">
-              {patients.filter(p => p.status === 'completed').length}
+              {patients.filter(p => 
+                p.status === 'completed' && 
+                p.notes?.includes('TRIAGE_COMPLETED:true') &&
+                !p.notes?.includes('CONSULT_DATA:')
+              ).length}
             </p>
           </CardContent>
         </Card>

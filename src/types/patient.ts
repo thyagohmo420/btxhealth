@@ -1,6 +1,6 @@
 import type { PrioridadeTipo } from './queue';
 
-export type PatientStatus = 'waiting' | 'waiting_triage' | 'waiting_consultation' | 'in_progress' | 'completed' | 'cancelled';
+export type PatientStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 export type Severity = 'low' | 'medium' | 'high';
 export type PriorityType = 'low' | 'medium' | 'high' | 'emergency';
 

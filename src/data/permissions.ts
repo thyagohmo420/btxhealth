@@ -17,7 +17,9 @@ export type Module =
   | 'hr'
   | 'admin'
   | 'patients'
-  | 'reports';
+  | 'reports'
+  | 'laboratory'
+  | 'exams';
 
 // Mapeamento de páginas por módulo
 export const modulePages: Record<Module, string[]> = {
@@ -29,7 +31,9 @@ export const modulePages: Record<Module, string[]> = {
   hr: ['/hr', '/employees', '/payroll'],
   admin: ['/admin', '/settings', '/users', '/sectors'],
   patients: ['/patients'], 
-  reports: ['/reports', '/statistics', '/analytics']
+  reports: ['/reports', '/statistics', '/analytics'],
+  laboratory: ['/laboratory'],
+  exams: ['/exams']
 };
 
 // Páginas acessíveis por todos usuários autenticados
@@ -82,11 +86,19 @@ export const permissions: Permission[] = [
   // Relatórios
   { id: 'reports.view', name: 'Visualizar Relatórios', description: 'Visualizar relatórios', module: 'reports' },
   { id: 'reports.generate', name: 'Gerar Relatórios', description: 'Gerar novos relatórios', module: 'reports' },
-  { id: 'reports.export', name: 'Exportar Relatórios', description: 'Exportar relatórios', module: 'reports' }
+  { id: 'reports.export', name: 'Exportar Relatórios', description: 'Exportar relatórios', module: 'reports' },
+  
+  // Laboratório
+  { id: 'laboratory.view', name: 'Visualizar Laboratório', description: 'Acesso ao laboratório', module: 'laboratory' },
+  { id: 'laboratory.edit', name: 'Editar Laboratório', description: 'Editar informações do laboratório', module: 'laboratory' },
+  { id: 'laboratory.add', name: 'Adicionar Laboratório', description: 'Adicionar novo laboratório', module: 'laboratory' },
+  { id: 'exams.view', name: 'Visualizar Exames', description: 'Visualizar exames', module: 'exams' },
+  { id: 'exams.edit', name: 'Editar Exames', description: 'Editar informações dos exames', module: 'exams' },
+  { id: 'exams.add', name: 'Adicionar Exames', description: 'Adicionar novo exame', module: 'exams' }
 ];
 
 // Definição das permissões por papel
-export const rolePermissions: Record<UserRole, string[]> = {
+export const rolePermissions = {
   // Médicos têm acesso ao consultório médico, visualização de pacientes e seus históricos
   medico: [
     'medicalOffice.view',
@@ -134,12 +146,26 @@ export const rolePermissions: Record<UserRole, string[]> = {
     'reports.export'
   ],
   
-  // RH tem acesso à área de RH e gestão de funcionários
+  // RH
   rh: [
     'hr.view',
-    'hr.manage',
-    'hr.payroll',
-    'reports.view'
+    'hr.edit',
+    'hr.add',
+    'professionals.view',
+    'professionals.edit',
+    'professionals.add',
+    'professionals.invite',
+    'config.access'
+  ],
+  
+  // Laboratório
+  laboratorio: [
+    'laboratory.view',
+    'laboratory.edit',
+    'laboratory.add',
+    'exams.view',
+    'exams.edit',
+    'exams.add'
   ],
   
   // Administradores têm acesso a tudo
@@ -162,8 +188,13 @@ export const rolePermissions: Record<UserRole, string[]> = {
     'financial.payments',
     'financial.reports',
     'hr.view',
-    'hr.manage',
-    'hr.payroll',
+    'hr.edit',
+    'hr.add',
+    'professionals.view',
+    'professionals.edit',
+    'professionals.add',
+    'professionals.invite',
+    'config.access',
     'admin.view',
     'admin.users',
     'admin.settings',

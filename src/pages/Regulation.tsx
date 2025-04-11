@@ -303,7 +303,7 @@ export default function Regulation() {
                       <h4 className="font-medium">{request.patient_name}</h4>
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>CPF: {request.patient_cpf}</p>
-                        <p>Data de Nascimento: {new Date(request.patient_birth_date).toLocaleDateString()}</p>
+                        <p>Data de Nascimento: {request.patient_birth_date ? new Date(request.patient_birth_date).toLocaleDateString() : 'Data não disponível'}</p>
                         <p>Especialidade: {request.specialty}</p>
                       </div>
                     </div>
@@ -325,7 +325,7 @@ export default function Regulation() {
                     <div>
                       <p className="text-gray-600">Data da Solicitação</p>
                       <p className="font-medium">
-                        {new Date(request.request_date).toLocaleString()}
+                        {request.request_date ? new Date(request.request_date).toLocaleString() : 'Data não disponível'}
                       </p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@ export default function Regulation() {
                   {request.status === 'approved' && request.approved_by_name && (
                     <div className="mt-4 text-sm text-gray-600">
                       <p>Aprovado por: {request.approved_by_name}</p>
-                      <p>Data: {new Date(request.approval_date!).toLocaleString()}</p>
+                      <p>Data: {request.approval_date ? new Date(request.approval_date).toLocaleString() : 'Data não disponível'}</p>
                     </div>
                   )}
                 </div>

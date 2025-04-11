@@ -73,7 +73,7 @@ export default function ElectronicRecord() {
                 <div key={index} className="border-l-4 border-blue-500 pl-4">
                   <p className="text-sm text-gray-500">{consultation.created_at}</p>
                   <p className="font-medium">Diagnóstico: {consultation.diagnosis}</p>
-                  <p>Sintomas: {consultation.symptoms.join(', ')}</p>
+                  <p>Sintomas: {consultation.symptoms}</p>
                   <p>Tratamento: {consultation.treatment}</p>
                 </div>
               ))}

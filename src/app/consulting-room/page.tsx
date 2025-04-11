@@ -216,9 +216,13 @@ export default function ConsultingRoom() {
   // Filtrar pacientes em espera ou em atendimento
   const consultingRoomPatients = patients.filter(p => 
     // Pacientes que completaram a triagem e estão prontos para consulta
-    (p.status === 'completed' && p.notes && p.notes.includes('TRIAGE_COMPLETED:true')) ||
+    (p.status === 'completed' && 
+     p.notes?.includes('TRIAGE_COMPLETED:true') && 
+     !p.notes?.includes('IN_CONSULTATION:true') && 
+     !p.notes?.includes('CONSULT_DATA:')) ||
     // Pacientes que já estão em consulta
-    (p.status === 'in_progress' && p.notes && p.notes.includes('IN_CONSULTATION:true'))
+    (p.status === 'in_progress' && 
+     p.notes?.includes('IN_CONSULTATION:true'))
   )
   
   const filteredPatients = consultingRoomPatients.filter(patient =>

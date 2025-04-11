@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { usePatients } from '../contexts/PatientsContext';
+import { usePatients } from '@/hooks/usePatients';
 import { Patient } from '@/types/patient';
 import { supabase } from '@/lib/supabase';
 
 export default function TVDisplay() {
-  const { patients, setPatients } = usePatients();
+  const { patients, refreshPatients } = usePatients();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Atualizar o horário a cada 10 segundos
@@ -17,32 +17,16 @@ export default function TVDisplay() {
   }, []);
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('*')
-          .in('status', ['waiting_consultation', 'in_progress'])
-          .order('priority', { ascending: false })
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-        setPatients(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar pacientes:', error);
-      }
-    };
-
-    fetchPatients();
-    const interval = setInterval(fetchPatients, 5000); // Atualiza a cada 5 segundos
+    refreshPatients();
+    const interval = setInterval(refreshPatients, 5000); // Atualiza a cada 5 segundos
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshPatients]);
 
   // Separar pacientes por setor
   const receptionPatients = patients.filter(p => p.status === 'waiting');
-  const triagePatients = patients.filter(p => p.status === 'waiting_triage');
-  const consultationPatients = patients.filter(p => p.status === 'waiting_consultation');
+  const triagePatients = patients.filter(p => p.status === 'waiting' && p.notes?.includes('SENT_TO_TRIAGE:true'));
+  const consultationPatients = patients.filter(p => p.status === 'waiting');
 
   // Ordenar pacientes por horário de chegada
   const sortByArrival = (patientList: Patient[]) => {

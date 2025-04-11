@@ -212,7 +212,7 @@ export default function Exams() {
                     <div>
                       <p className="text-sm text-gray-600">Data da Solicitação</p>
                       <p className="font-medium">
-                        {new Date(exam.requestDate).toLocaleDateString()}
+                        {exam.requestDate ? new Date(exam.requestDate).toLocaleDateString() : 'Data não disponível'}
                       </p>
                     </div>
                     {exam.laboratory && (
@@ -227,7 +227,7 @@ export default function Exams() {
                     <div className="mt-2">
                       <p className="text-sm text-gray-600">Resultado Disponível em:</p>
                       <p className="font-medium">
-                        {new Date(exam.resultDate).toLocaleString()}
+                        {exam.resultDate ? new Date(exam.resultDate).toLocaleString() : 'Data não disponível'}
                       </p>
                     </div>
                   )}

@@ -31,20 +31,25 @@ export default function TVDisplay() {
     if (!loading && patients) {
       // Filtrar pacientes por status
       const waiting = patients
-        .filter(p => p.status === 'waiting')
+        .filter(p => 
+          p.status === 'waiting' && 
+          !p.notes?.includes('SENT_TO_TRIAGE:true')
+        )
         .slice(0, 3) // Limitar a 3 pacientes
       
       const triage = patients
         .filter(p => 
-          p.status === 'in_progress' && 
-          (!p.notes || !p.notes.includes('TRIAGE_DATA:'))
+          p.status === 'waiting' && 
+          p.notes?.includes('SENT_TO_TRIAGE:true') &&
+          !p.notes?.includes('TRIAGE_COMPLETED:true')
         )
         .slice(0, 3) // Limitar a 3 pacientes
       
       const consultation = patients
         .filter(p => 
-          p.status === 'waiting_consultation' || 
-          (p.status === 'in_progress' && p.notes && p.notes.includes('TRIAGE_DATA:'))
+          p.status === 'completed' && 
+          p.notes?.includes('TRIAGE_COMPLETED:true') &&
+          !p.notes?.includes('CONSULT_DATA:')
         )
         .slice(0, 3) // Limitar a 3 pacientes
       

@@ -31,7 +31,8 @@ export default function UserAccess() {
     farmacia: users.farmacia,
     financeiro: users.financeiro,
     rh: users.rh,
-    admin: users.admin
+    admin: users.admin,
+    laboratorio: users.laboratorio
   };
 
   const roleLabels: Record<UserRole, string> = {
@@ -41,7 +42,8 @@ export default function UserAccess() {
     farmacia: 'Farmácia',
     financeiro: 'Financeiro',
     rh: 'Recursos Humanos',
-    admin: 'Administrador'
+    admin: 'Administrador',
+    laboratorio: 'Laboratório'
   };
 
   const roleColors: Record<UserRole, string> = {
@@ -51,7 +53,8 @@ export default function UserAccess() {
     farmacia: 'bg-purple-100 text-purple-800',
     financeiro: 'bg-pink-100 text-pink-800',
     rh: 'bg-orange-100 text-orange-800',
-    admin: 'bg-red-100 text-red-800'
+    admin: 'bg-red-100 text-red-800',
+    laboratorio: 'bg-indigo-100 text-indigo-800'
   };
 
   return (
@@ -89,6 +92,7 @@ export default function UserAccess() {
               <option value="financeiro">Financeiro</option>
               <option value="rh">RH</option>
               <option value="admin">Administradores</option>
+              <option value="laboratorio">Laboratório</option>
             </select>
           </div>
           <div className="form-control flex-1">

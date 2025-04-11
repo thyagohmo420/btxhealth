@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePatients } from '@/contexts/PatientsContext'
+import { PatientStatus, PriorityType } from '@/types/patient'
 import {
   Card,
   CardContent,
@@ -185,19 +186,19 @@ Observações: ${triageForm.observations}`
   }
 
   // Mapear da classificação de risco para a prioridade do paciente
-  const mapRiskToPriority = (risk: string) => {
+  const mapRiskToPriority = (risk: string): PriorityType => {
     switch (risk) {
       case 'red':
       case 'orange':
         return 'emergency';
       case 'yellow':
-        return 'urgent';
+        return 'high';
       case 'green':
-        return 'normal';
+        return 'medium';
       case 'blue':
         return 'low';
       default:
-        return 'normal';
+        return 'medium';
     }
   };
 
@@ -205,14 +206,12 @@ Observações: ${triageForm.observations}`
     switch (priority) {
       case 'emergency':
         return 'bg-red-100 text-red-800';
-      case 'urgent':
-        return 'bg-orange-100 text-orange-800';
       case 'high':
+        return 'bg-orange-100 text-orange-800';
+      case 'medium':
         return 'bg-yellow-100 text-yellow-800';
-      case 'normal':
-        return 'bg-green-100 text-green-800';
       case 'low':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -235,8 +234,9 @@ Observações: ${triageForm.observations}`
 
   // Filtrar apenas pacientes em triagem
   const triagePatients = patients.filter(p => 
-    p.status === 'in_progress' &&
-    (!p.notes || !p.notes.includes('TRIAGE_COMPLETED:true'))
+    p.status === 'waiting' &&
+    p.notes?.includes('SENT_TO_TRIAGE:true') &&
+    (!p.notes?.includes('TRIAGE_COMPLETED:true'))
   )
   
   const filteredPatients = triagePatients.filter(patient =>
@@ -312,12 +312,10 @@ Observações: ${triageForm.observations}`
                         >
                           {patient.priority === 'emergency'
                             ? 'Emergência'
-                            : patient.priority === 'urgent'
-                            ? 'Urgente'
                             : patient.priority === 'high'
                             ? 'Alta'
-                            : patient.priority === 'normal'
-                            ? 'Normal'
+                            : patient.priority === 'medium'
+                            ? 'Média'
                             : 'Baixa'}
                         </span>
                       </div>

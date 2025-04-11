@@ -99,7 +99,8 @@ export default function Triage() {
         .update({
           priority,
           vital_signs: vitalSigns,
-          status: 'waiting_consultation', // Atualiza status do paciente para aguardando consulta
+          status: 'waiting', // Atualiza status do paciente para aguardando
+          notes: (selectedPatient.notes || '') + '\nSENT_TO_CONSULTATION:true', // Adiciona nota indicando que foi encaminhado para consulta
           // Adiciona sintomas ao paciente
           symptoms: symptoms.join(', '),
           // Data de triagem

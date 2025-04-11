@@ -59,78 +59,86 @@ export const TRIAGE_WAIT_TIMES: Record<TriageColor, [number, number]> = {
   'Azul': [120, 240] // 2-4 horas
 };
 
+// Interface para o banco de dados de sintomas
+interface SymptomData {
+  symptom: string;
+  keywords: string[];
+  defaultPriority: TriagePriority;
+  specialties: string[];
+}
+
 // Banco de dados de sintomas e sua classificação
-const symptomDatabase = [
+const symptomDatabase: SymptomData[] = [
   { 
     symptom: 'Dor torácica', 
     keywords: ['dor no peito', 'aperto no peito', 'dor precordial', 'angina'],
-    defaultPriority: 'Vermelho',
+    defaultPriority: 'Emergência',
     specialties: ['Cardiologia', 'Clínica Médica']
   },
   { 
     symptom: 'Dispneia grave', 
     keywords: ['falta de ar', 'dificuldade para respirar', 'sufocamento', 'respiração curta'],
-    defaultPriority: 'Vermelho',
+    defaultPriority: 'Emergência',
     specialties: ['Pneumologia', 'Clínica Médica']
   },
   { 
     symptom: 'Hemorragia', 
     keywords: ['sangramento', 'perda de sangue', 'hemorragia'],
-    defaultPriority: 'Vermelho',
+    defaultPriority: 'Emergência',
     specialties: ['Cirurgia', 'Clínica Médica']
   },
   { 
     symptom: 'Convulsão', 
     keywords: ['ataque', 'crise convulsiva', 'epilepsia', 'desmaio com tremores'],
-    defaultPriority: 'Laranja',
+    defaultPriority: 'Muito Urgente',
     specialties: ['Neurologia', 'Clínica Médica']
   },
   { 
     symptom: 'Febre alta', 
     keywords: ['febre', 'temperatura alta', 'pirexia'],
-    defaultPriority: 'Amarelo',
+    defaultPriority: 'Urgente',
     specialties: ['Infectologia', 'Clínica Médica']
   },
   { 
     symptom: 'Trauma leve', 
     keywords: ['pancada', 'contusão', 'queda', 'acidente leve', 'batida'],
-    defaultPriority: 'Verde',
+    defaultPriority: 'Pouco Urgente',
     specialties: ['Ortopedia', 'Cirurgia']
   },
   { 
     symptom: 'Dor abdominal', 
     keywords: ['dor na barriga', 'dor abdominal', 'cólica'],
-    defaultPriority: 'Amarelo',
+    defaultPriority: 'Urgente',
     specialties: ['Gastroenterologia', 'Cirurgia', 'Clínica Médica']
   },
   { 
     symptom: 'Cefaleia', 
     keywords: ['dor de cabeça', 'enxaqueca', 'cefaleia'],
-    defaultPriority: 'Verde',
+    defaultPriority: 'Pouco Urgente',
     specialties: ['Neurologia', 'Clínica Médica']
   },
   { 
     symptom: 'Tontura', 
     keywords: ['vertigem', 'tontura', 'desequilíbrio', 'sensação de desmaio'],
-    defaultPriority: 'Verde',
+    defaultPriority: 'Pouco Urgente',
     specialties: ['Neurologia', 'Otorrinolaringologia', 'Clínica Médica']
   },
   { 
     symptom: 'Vômitos', 
     keywords: ['náusea', 'enjoo', 'vômito'],
-    defaultPriority: 'Verde',
+    defaultPriority: 'Pouco Urgente',
     specialties: ['Gastroenterologia', 'Clínica Médica']
   },
   { 
     symptom: 'Reação alérgica grave', 
     keywords: ['alergia', 'urticária', 'inchaço', 'anafilaxia', 'edema'],
-    defaultPriority: 'Vermelho',
+    defaultPriority: 'Emergência',
     specialties: ['Alergologia', 'Clínica Médica']
   },
   { 
     symptom: 'Reação alérgica leve', 
     keywords: ['coceira', 'vermelhidão', 'prurido'],
-    defaultPriority: 'Verde',
+    defaultPriority: 'Pouco Urgente',
     specialties: ['Alergologia', 'Dermatologia', 'Clínica Médica']
   }
 ];
@@ -146,6 +154,22 @@ export function performAITriage(patient: TriagePatient): Promise<TriageResult> {
     let highestPriority: TriagePriority = 'Não Urgente';
     let matchedSpecialties: string[] = [];
     
+    // Define o ranking de prioridades
+    const priorityRanking: Record<TriagePriority, number> = {
+      'Emergência': 5,
+      'Muito Urgente': 4,
+      'Urgente': 3,
+      'Pouco Urgente': 2,
+      'Não Urgente': 1
+    };
+
+    // Função auxiliar para atualizar a prioridade
+    const updatePriority = (newPriority: TriagePriority) => {
+      if (priorityRanking[newPriority] > priorityRanking[highestPriority]) {
+        highestPriority = newPriority;
+      }
+    };
+    
     // Analisa sintomas principais e queixa
     const allSymptomsText = [
       patient.mainComplaint,
@@ -159,26 +183,14 @@ export function performAITriage(patient: TriagePatient): Promise<TriageResult> {
       );
       
       if (hasSymptom) {
-        // Atualiza prioridade se a nova for mais alta
-        const priorityRanking = {
-          'Emergência': 5,
-          'Muito Urgente': 4,
-          'Urgente': 3,
-          'Pouco Urgente': 2,
-          'Não Urgente': 1
-        };
-        
-        if (priorityRanking[dbSymptom.defaultPriority] > priorityRanking[highestPriority]) {
-          highestPriority = dbSymptom.defaultPriority;
-        }
-        
+        updatePriority(dbSymptom.defaultPriority);
         // Adiciona especialidades recomendadas
         matchedSpecialties = [...matchedSpecialties, ...dbSymptom.specialties];
       }
     });
     
-    // Remove duplicatas de especialidades
-    matchedSpecialties = [...new Set(matchedSpecialties)];
+    // Remove duplicatas de especialidades usando Array.from
+    matchedSpecialties = Array.from(new Set(matchedSpecialties));
     
     // Ajusta prioridade com base nos sinais vitais, se disponíveis
     if (patient.vitals) {
@@ -186,8 +198,9 @@ export function performAITriage(patient: TriagePatient): Promise<TriageResult> {
       
       // Febre alta (>39°C)
       if (vitals.temperature && vitals.temperature > 39) {
-        if (highestPriority === 'Pouco Urgente' || highestPriority === 'Não Urgente') {
-          highestPriority = 'Urgente';
+        const currentPriorityRank = priorityRanking[highestPriority];
+        if (currentPriorityRank <= priorityRanking['Pouco Urgente']) {
+          updatePriority('Urgente');
         }
       }
       
@@ -195,48 +208,44 @@ export function performAITriage(patient: TriagePatient): Promise<TriageResult> {
       if (vitals.bloodPressure) {
         const [systolic, diastolic] = vitals.bloodPressure.split('/').map(Number);
         if (systolic > 180 || diastolic > 110 || systolic < 90) {
-          if (highestPriority === 'Pouco Urgente' || highestPriority === 'Não Urgente') {
-            highestPriority = 'Urgente';
+          const currentPriorityRank = priorityRanking[highestPriority];
+          if (currentPriorityRank <= priorityRanking['Pouco Urgente']) {
+            updatePriority('Urgente');
           }
         }
       }
       
       // Frequência cardíaca muito alta ou muito baixa
-      if (vitals.heartRate && (vitals.heartRate > 120 || vitals.heartRate < 50)) {
-        if (highestPriority !== 'Emergência') {
-          highestPriority = 'Muito Urgente';
+      if (vitals.heartRate) {
+        if (vitals.heartRate > 150 || vitals.heartRate < 40) {
+          updatePriority('Emergência');
         }
       }
       
-      // Saturação de oxigênio baixa
-      if (vitals.oxygenSaturation && vitals.oxygenSaturation < 90) {
-        highestPriority = 'Emergência';
-      } else if (vitals.oxygenSaturation && vitals.oxygenSaturation < 94) {
-        if (highestPriority !== 'Emergência') {
-          highestPriority = 'Muito Urgente';
+      // Saturação de oxigênio muito baixa
+      if (vitals.oxygenSaturation) {
+        if (vitals.oxygenSaturation < 90) {
+          updatePriority('Emergência');
         }
       }
       
-      // Nível de dor alto
-      if (vitals.painLevel && vitals.painLevel >= 8) {
-        if (highestPriority === 'Pouco Urgente' || highestPriority === 'Não Urgente') {
-          highestPriority = 'Urgente';
-        }
-      }
-      
-      // Glicemia muito alta ou muito baixa
-      if (vitals.glucoseLevel) {
-        if (vitals.glucoseLevel < 60 || vitals.glucoseLevel > 400) {
-          if (highestPriority !== 'Emergência') {
-            highestPriority = 'Muito Urgente';
+      // Nível de dor muito alto
+      if (vitals.painLevel) {
+        if (vitals.painLevel >= 8) {
+          const currentPriorityRank = priorityRanking[highestPriority];
+          if (currentPriorityRank <= priorityRanking['Pouco Urgente']) {
+            updatePriority('Urgente');
           }
         }
       }
     }
     
     // Ajusta prioridade para idosos (>65 anos)
-    if (patient.age > 65 && highestPriority === 'Não Urgente') {
-      highestPriority = 'Pouco Urgente';
+    if (patient.age > 65) {
+      const currentPriorityRank = priorityRanking[highestPriority];
+      if (currentPriorityRank <= priorityRanking['Não Urgente']) {
+        updatePriority('Pouco Urgente');
+      }
     }
     
     // Determina a cor correspondente à prioridade
@@ -250,23 +259,15 @@ export function performAITriage(patient: TriagePatient): Promise<TriageResult> {
     let recommendedAction = '';
     let alerts: string[] = [];
     
-    switch (highestPriority) {
-      case 'Emergência':
-        recommendedAction = 'Encaminhar imediatamente para sala de emergência';
-        break;
-      case 'Muito Urgente':
-        recommendedAction = 'Encaminhar para atendimento prioritário em até 10 minutos';
-        break;
-      case 'Urgente':
-        recommendedAction = 'Monitorar sinais vitais e aguardar atendimento em até 60 minutos';
-        break;
-      case 'Pouco Urgente':
-        recommendedAction = 'Aguardar atendimento por ordem de chegada';
-        break;
-      case 'Não Urgente':
-        recommendedAction = 'Considerar encaminhamento para unidade básica de saúde';
-        break;
-    }
+    const actionMap: Record<TriagePriority, string> = {
+      'Emergência': 'Encaminhar imediatamente para sala de emergência',
+      'Muito Urgente': 'Encaminhar para atendimento prioritário em até 10 minutos',
+      'Urgente': 'Monitorar sinais vitais e aguardar atendimento em até 60 minutos',
+      'Pouco Urgente': 'Aguardar atendimento por ordem de chegada',
+      'Não Urgente': 'Considerar encaminhamento para unidade básica de saúde'
+    };
+
+    recommendedAction = actionMap[highestPriority];
     
     // Gera alertas específicos
     if (patient.vitals) {

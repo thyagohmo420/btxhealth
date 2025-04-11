@@ -1,51 +1,41 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import { ReactNode, useEffect } from 'react'
-import { toast } from 'sonner'
+import { useRouter, usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
 interface ProtectedRouteProps {
-  children: ReactNode
-  allowedRoles?: string[]
+  children: React.ReactNode
 }
 
-export const ProtectedRoute = ({ 
-  children, 
-  allowedRoles = [] 
-}: ProtectedRouteProps) => {
+const publicRoutes = ['/login', '/register', '/forgot-password']
+
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth()
   const router = useRouter()
-  
+  const pathname = usePathname()
+
   useEffect(() => {
-    // Se ainda está carregando, não faz nada
-    if (loading) return
-
-    // Se não há usuário autenticado, redireciona para login
-    if (!user) {
-      toast.error('Você precisa estar autenticado para acessar esta página')
-      router.push('/login')
-      return
+    if (!loading) {
+      if (!user && !publicRoutes.includes(pathname)) {
+        router.push('/login')
+      } else if (user && publicRoutes.includes(pathname)) {
+        router.push('/dashboard')
+      }
     }
+  }, [user, loading, pathname, router])
 
-    // Se existem papéis permitidos e o usuário não tem um dos papéis necessários
-    if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-      toast.error('Você não tem permissão para acessar esta página')
-      router.push('/dashboard')
-      return
-    }
-  }, [user, loading, router, allowedRoles])
-
-  // Mostra nada enquanto verifica autenticação
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Carregando...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
   }
 
-  // Não mostra nada se o usuário não estiver autenticado ou não tiver permissão
-  if (!user || (allowedRoles.length > 0 && !allowedRoles.includes(user.role))) {
+  if (!user && !publicRoutes.includes(pathname)) {
     return null
   }
 
-  // Se passou por todas as verificações, renderiza os filhos
   return <>{children}</>
 } 

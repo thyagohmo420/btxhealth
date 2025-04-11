@@ -77,7 +77,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
           <Stethoscope className="h-5 w-5 text-blue-500" />
           <span className="text-blue-700 font-medium">
-            {user?.role === 'administrador' ? 'Administrador' : 'Profissional de Saúde'}
+            {user?.role === 'admin' ? 'Administrador' : 'Profissional de Saúde'}
           </span>
         </div>
       </div>

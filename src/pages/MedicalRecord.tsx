@@ -97,10 +97,13 @@ export default function MedicalRecord() {
               {consultations.map((consultation, index) => (
                 <div key={index} className="border-l-4 border-blue-500 pl-4">
                   <p className="text-sm text-gray-500">
-                    {new Date(consultation.created_at).toLocaleString('pt-BR')}
+                    {consultation.created_at 
+                      ? new Date(consultation.created_at).toLocaleString('pt-BR')
+                      : 'Data não disponível'
+                    }
                   </p>
                   <p className="font-medium">Diagnóstico: {consultation.diagnosis}</p>
-                  <p>Sintomas: {consultation.symptoms.join(', ')}</p>
+                  <p>Sintomas: {consultation.symptoms}</p>
                   <p>Tratamento: {consultation.treatment}</p>
                   {consultation.prescriptions && consultation.prescriptions.length > 0 && (
                     <div className="mt-2">

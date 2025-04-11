@@ -1,129 +1,127 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseConfig'
-import { User, UserRole } from '@/data/users'
-import allUsers from '@/data/users'
+import { UserRole } from '@/data/users'
+
+interface AuthUser {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  active: boolean
+  sectors?: string[]
+  created_at?: string
+  last_sign_in_at?: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signOut: () => void
+  signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Buscar dados adicionais do usuário do Supabase
+        supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Erro ao buscar dados do usuário:', error)
+              setUser(null)
+            } else {
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                name: data.name,
+                role: data.role as UserRole,
+                active: data.active,
+                sectors: data.sectors,
+                created_at: session.user.created_at,
+                last_sign_in_at: session.user.last_sign_in_at,
+              })
+            }
+            setLoading(false)
+          })
+      } else {
+        setUser(null)
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Erro ao recuperar usuário:', error)
-    } finally {
-      setLoading(false)
-    }
+    })
+
+    // Escutar mudanças de auth
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Buscar dados adicionais do usuário do Supabase
+        supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Erro ao buscar dados do usuário:', error)
+              setUser(null)
+            } else {
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                name: data.name,
+                role: data.role as UserRole,
+                active: data.active,
+                sectors: data.sectors,
+                created_at: session.user.created_at,
+                last_sign_in_at: session.user.last_sign_in_at,
+              })
+            }
+          })
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true)
-      
-      // Buscar usuário pelo email
-      const foundUser = allUsers.all.find(u => u.email.toLowerCase() === email.toLowerCase())
-      
-      if (!foundUser) {
-        toast.error('Usuário não encontrado')
-        throw new Error('Usuário não encontrado')
-      }
-      
-      // Verificar senha
-      if (foundUser.password !== password) {
-        toast.error('Senha incorreta')
-        throw new Error('Senha incorreta')
-      }
-      
-      // Atualizar último login
-      const updatedUser = {
-        ...foundUser,
-        lastLogin: new Date().toISOString()
-      }
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser))
-      setUser(updatedUser)
-      
-      // Redirecionar com base no papel do usuário
-      redirectBasedOnRole(updatedUser.role)
-      
-      toast.success(`Bem-vindo(a), ${updatedUser.name}!`)
-    } catch (error) {
-      console.error('Erro ao fazer login:', error)
-      throw error
-    } finally {
-      setLoading(false)
-    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) throw error
+    router.push('/dashboard')
   }
 
-  const redirectBasedOnRole = (role: UserRole) => {
-    switch (role) {
-      case 'medico':
-        window.location.href = '/medical-office'
-        break
-      case 'recepcao':
-        window.location.href = '/reception'
-        break
-      case 'enfermagem':
-        window.location.href = '/triage'
-        break
-      case 'farmacia':
-        window.location.href = '/pharmacy'
-        break
-      case 'financeiro':
-        window.location.href = '/financial'
-        break
-      case 'rh':
-        window.location.href = '/hr'
-        break
-      case 'laboratorio':
-        window.location.href = '/laboratory'
-        break
-      case 'admin':
-        window.location.href = '/dashboard'
-        break
-      default:
-        window.location.href = '/dashboard'
-    }
-  }
-
-  const signOut = () => {
-    try {
-      localStorage.removeItem('user')
-      setUser(null)
-      window.location.href = '/login'
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error)
-    }
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    router.push('/login')
   }
 
   const resetPassword = async (email: string) => {
     try {
-      const foundUser = allUsers.all.find(u => u.email.toLowerCase() === email.toLowerCase())
-      
-      if (!foundUser) {
-        toast.error('Email não encontrado no sistema')
-        throw new Error('Email não encontrado')
-      }
-      
+      const { error } = await supabase.auth.resetPasswordForEmail(email)
+      if (error) throw error
       toast.success('Se este email estiver cadastrado, você receberá instruções para redefinir sua senha')
     } catch (error) {
       console.error('Erro ao enviar email de recuperação:', error)
@@ -142,14 +140,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   )
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider')
   }
   return context

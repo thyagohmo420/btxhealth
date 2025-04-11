@@ -222,13 +222,13 @@ export default function ProfessionalManagement() {
                       <div>
                         <p className="text-gray-600">Cadastrado em</p>
                         <p className="font-medium">
-                          {new Date(professional.created_at).toLocaleDateString()}
+                          {professional.created_at ? new Date(professional.created_at).toLocaleDateString() : 'Data não disponível'}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-600">Última atualização</p>
                         <p className="font-medium">
-                          {new Date(professional.updated_at).toLocaleDateString()}
+                          {professional.updated_at ? new Date(professional.updated_at).toLocaleDateString() : 'Data não disponível'}
                         </p>
                       </div>
                     </div>

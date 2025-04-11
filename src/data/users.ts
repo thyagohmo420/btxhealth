@@ -224,27 +224,30 @@ export const farmaciaUsers: User[] = [
 export const laboratorioUsers: User[] = [
   {
     id: uuidv4(),
-    email: 'bianca.lab@btxhealth.com',
+    email: 'maria.lab@btxhealth.com',
     password: 'Lab123@BTX',
-    name: 'Bianca Martins',
+    name: 'Maria Santos',
     role: 'laboratorio',
-    active: true
+    active: true,
+    sectors: ['Análises Clínicas']
   },
   {
     id: uuidv4(),
-    email: 'ricardo.lab@btxhealth.com',
+    email: 'jose.lab@btxhealth.com',
     password: 'Lab456@BTX',
-    name: 'Ricardo Moura',
+    name: 'José Silva',
     role: 'laboratorio',
-    active: true
+    active: true,
+    sectors: ['Bioquímica']
   },
   {
     id: uuidv4(),
-    email: 'fernanda.lab@btxhealth.com',
+    email: 'ana.lab@btxhealth.com',
     password: 'Lab789@BTX',
-    name: 'Fernanda Costa',
+    name: 'Ana Paula',
     role: 'laboratorio',
-    active: true
+    active: true,
+    sectors: ['Hematologia']
   }
 ];
 
@@ -377,5 +380,6 @@ export default {
   financeiro: financeiroUsers,
   rh: rhUsers,
   admin: adminUsers,
+  laboratorio: laboratorioUsers,
   all: allUsers
 }; 

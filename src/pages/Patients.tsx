@@ -148,14 +148,13 @@ export default function Patients() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            patient.status === 'waiting' || patient.status === 'waiting_consultation' || patient.status === 'in_progress' 
+                            patient.status === 'waiting' || patient.status === 'in_progress' 
                               ? 'bg-blue-100 text-blue-800' 
                               : patient.status === 'completed' 
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-gray-100 text-gray-800'
                           }`}>
                             {patient.status === 'waiting' ? 'Aguardando' : 
-                             patient.status === 'waiting_consultation' ? 'Aguardando Consulta' :
                              patient.status === 'in_progress' ? 'Em Atendimento' :
                              patient.status === 'completed' ? 'Atendido' : 
                              patient.status}

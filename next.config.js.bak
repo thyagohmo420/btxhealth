@@ -17,13 +17,6 @@ const nextConfig = {
         poll: 1000,
       }
     }
-    
-    // Resolver problema do punycode
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      punycode: false,
-    }
-    
     return config
   },
   // Configurações de redirecionamento
@@ -41,6 +34,7 @@ const nextConfig = {
       },
     ]
   },
+  output: 'export',
   trailingSlash: true
 }
 
