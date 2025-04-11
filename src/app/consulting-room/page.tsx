@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Stethoscope, ClipboardList, Pill, FileText, Upload, TestTube, CheckSquare, Tv } from 'lucide-react'
+import { Search, Stethoscope, Clipboard, Pill, FileText, Upload, TestTube, CheckSquare, Tv } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -535,7 +535,7 @@ export default function ConsultingRoom() {
 
                 <div>
                       <label className="text-sm font-medium text-purple-800 flex items-center gap-2">
-                        <ClipboardList className="w-4 h-4 text-purple-700" />
+                        <Clipboard className="w-4 h-4 text-purple-700" />
                     Observações e Recomendações
                   </label>
                   <textarea

@@ -275,4 +275,7 @@ declare module 'lucide-react' {
   export const ZapOff: Icon
   export const ZoomIn: Icon
   export const ZoomOut: Icon
+  export const Pill: Icon
+  export const TestTube: Icon
+  export const CheckSquare: Icon
 } 
