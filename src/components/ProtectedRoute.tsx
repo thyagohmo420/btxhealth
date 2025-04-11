@@ -15,7 +15,7 @@ const publicRoutes = ['/login', '/register', '/forgot-password']
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const pathname = usePathname()
+  const pathname = usePathname() || ''
 
   const userRole = user?.role as UserRole | undefined
 
