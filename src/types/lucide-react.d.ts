@@ -198,6 +198,7 @@ declare module 'lucide-react' {
   export const Search: Icon
   export const Send: Icon
   export const Server: Icon
+  export const Stethoscope: Icon
   export const Settings: Icon
   export const Share: Icon
   export const Share2: Icon
