@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react'
 import { 
-  FilePenLine, 
+  FileEdit, 
   FileText, 
   Search, 
   Plus,
   Edit,
   Trash,
   User,
-  Pill,
+  Package,
   Calendar,
   Copy,
   CheckCircle,
@@ -307,7 +307,7 @@ export default function AIPrescription() {
               <Button variant="outline">Cancelar</Button>
               <div className="space-x-2">
                 <Button variant="outline">
-                  <FilePenLine className="h-4 w-4 mr-2" />
+                  <FileEdit className="h-4 w-4 mr-2" />
                   Salvar Rascunho
                 </Button>
                 <Button>
@@ -362,7 +362,7 @@ export default function AIPrescription() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" className="mr-1">
-                          <Pill className="h-4 w-4" />
+                          <Package className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="mr-1">
                           <Edit className="h-4 w-4" />

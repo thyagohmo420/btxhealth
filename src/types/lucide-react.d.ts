@@ -19,6 +19,17 @@ declare module 'lucide-react' {
   export const Star: Icon
   export const Loader2: Icon
   export const FileText: Icon
+  export const FilePenLine: Icon
+  export const FilePlus: Icon
+  export const FileEdit: Icon
+  export const FileCheck: Icon
+  export const FileX: Icon
+  export const FileSearch: Icon
+  export const FileArchive: Icon
+  export const FileCode: Icon
+  export const FileJson: Icon
+  export const FileQuestion: Icon
+  export const FileWarning: Icon
   export const Mail: Icon
   export const MessageSquare: Icon
   export const BarChart: Icon
@@ -128,7 +139,6 @@ declare module 'lucide-react' {
   export const Loader: Icon
   export const Lock: Icon
   export const LogIn: Icon
-  export const Mail: Icon
   export const Map: Icon
   export const MapPin: Icon
   export const Maximize: Icon
