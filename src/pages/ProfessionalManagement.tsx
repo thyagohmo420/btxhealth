@@ -23,13 +23,18 @@ const professionalSchema = z.object({
   registration_number: z.string().min(3, 'Registro profissional é obrigatório'),
   sector_id: z.string().min(1, 'Selecione um setor'),
   active: z.boolean().default(true)
-});
+}).required();
 
 type ProfessionalFormData = z.infer<typeof professionalSchema>;
 
-interface Professional extends ProfessionalFormData {
+interface Professional {
   id: string;
   user_id: string;
+  full_name: string;
+  specialty: string;
+  registration_number: string;
+  sector_id: string;
+  active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -48,7 +53,10 @@ export default function ProfessionalManagement() {
     reset,
     formState: { errors }
   } = useForm<ProfessionalFormData>({
-    resolver: zodResolver(professionalSchema)
+    resolver: zodResolver(professionalSchema),
+    defaultValues: {
+      active: true
+    }
   });
 
   useEffect(() => {
