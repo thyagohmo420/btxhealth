@@ -220,10 +220,10 @@ export default function Patients() {
           </Dialog>
           
           <Button className="flex items-center gap-2" onClick={handleNewPatient}>
-            <UserPlus className="w-4 h-4" />
-            Novo Paciente
-          </Button>
-        </div>
+          <UserPlus className="w-4 h-4" />
+          Novo Paciente
+        </Button>
+      </div>
       </div>
 
       {/* Busca de pacientes */}

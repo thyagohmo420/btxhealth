@@ -88,7 +88,7 @@ export default function Triage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient) return;
-    
+
     try {
       console.log("Iniciando envio de triagem para paciente:", selectedPatient.full_name);
       console.log("Prioridade definida:", priority);
@@ -275,21 +275,21 @@ export default function Triage() {
   const resetTriageState = () => {
     setTriageDone(false);
     setTriagePatient(null);
-    setSelectedPatient(null);
+      setSelectedPatient(null);
     setPriority('normal');
-    setSymptoms([]);
-    setVitalSigns({
-      temperature: 0,
-      bloodPressure: {
-        systolic: 0,
-        diastolic: 0
-      },
-      heartRate: 0,
-      respiratoryRate: 0,
-      oxygenSaturation: 0,
-      painLevel: 0,
-      glucoseLevel: 0
-    });
+      setSymptoms([]);
+      setVitalSigns({
+        temperature: 0,
+        bloodPressure: {
+          systolic: 0,
+          diastolic: 0
+        },
+        heartRate: 0,
+        respiratoryRate: 0,
+        oxygenSaturation: 0,
+        painLevel: 0,
+        glucoseLevel: 0
+      });
   };
 
   // Adicionar função para classificar um paciente aleatoriamente para teste
@@ -480,121 +480,121 @@ export default function Triage() {
                     </button>
                   </div>
                 </div>
-                
+              
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Sintomas</span>
+                </label>
+                <textarea
+                  className="textarea textarea-bordered h-24"
+                  value={symptoms.join('\n')}
+                  onChange={(e) => setSymptoms(e.target.value.split('\n').filter(Boolean))}
+                  placeholder="Digite os sintomas (um por linha)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Sintomas</span>
+                    <span className="label-text">Pressão Arterial</span>
                   </label>
-                  <textarea
-                    className="textarea textarea-bordered h-24"
-                    value={symptoms.join('\n')}
-                    onChange={(e) => setSymptoms(e.target.value.split('\n').filter(Boolean))}
-                    placeholder="Digite os sintomas (um por linha)"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Pressão Arterial</span>
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="text"
-                        className="input input-bordered w-full"
-                        value={vitalSigns.bloodPressure?.systolic + '/' + vitalSigns.bloodPressure?.diastolic}
-                        onChange={(e) => setVitalSigns({ ...vitalSigns, bloodPressure: { ...vitalSigns.bloodPressure, systolic: Number(e.target.value.split('/')[0]) || 0, diastolic: Number(e.target.value.split('/')[1]) || 0 } })}
-                        placeholder="120/80"
-                      />
-                      <span className="input-group-addon">mmHg</span>
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Frequência Cardíaca</span>
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="number"
-                        className="input input-bordered w-full"
-                        value={vitalSigns.heartRate}
-                        onChange={(e) => setVitalSigns({ ...vitalSigns, heartRate: Number(e.target.value) })}
-                        placeholder="80"
-                      />
-                      <span className="input-group-addon">bpm</span>
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Frequência Respiratória</span>
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="number"
-                        className="input input-bordered w-full"
-                        value={vitalSigns.respiratoryRate}
-                        onChange={(e) => setVitalSigns({ ...vitalSigns, respiratoryRate: Number(e.target.value) })}
-                        placeholder="16"
-                      />
-                      <span className="input-group-addon">rpm</span>
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Temperatura</span>
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="number"
-                        className="input input-bordered w-full"
-                        value={vitalSigns.temperature}
-                        onChange={(e) => setVitalSigns({ ...vitalSigns, temperature: Number(e.target.value) })}
-                        placeholder="36.5"
-                        step="0.1"
-                      />
-                      <span className="input-group-addon">°C</span>
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Saturação de Oxigênio</span>
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="number"
-                        className="input input-bordered w-full"
-                        value={vitalSigns.oxygenSaturation}
-                        onChange={(e) => setVitalSigns({ ...vitalSigns, oxygenSaturation: Number(e.target.value) })}
-                        placeholder="98"
-                      />
-                      <span className="input-group-addon">%</span>
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Nível de Dor (0-10)</span>
-                    </label>
+                  <div className="input-group">
                     <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={vitalSigns.painLevel}
-                      onChange={(e) => setVitalSigns({ ...vitalSigns, painLevel: Number(e.target.value) })}
-                      className="range"
-                      step="1"
+                      type="text"
+                      className="input input-bordered w-full"
+                      value={vitalSigns.bloodPressure?.systolic + '/' + vitalSigns.bloodPressure?.diastolic}
+                      onChange={(e) => setVitalSigns({ ...vitalSigns, bloodPressure: { ...vitalSigns.bloodPressure, systolic: Number(e.target.value.split('/')[0]) || 0, diastolic: Number(e.target.value.split('/')[1]) || 0 } })}
+                      placeholder="120/80"
                     />
-                    <div className="w-full flex justify-between text-xs px-2">
-                      <span>0</span>
-                      <span>5</span>
-                      <span>10</span>
-                    </div>
+                    <span className="input-group-addon">mmHg</span>
                   </div>
                 </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Frequência Cardíaca</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={vitalSigns.heartRate}
+                      onChange={(e) => setVitalSigns({ ...vitalSigns, heartRate: Number(e.target.value) })}
+                      placeholder="80"
+                    />
+                    <span className="input-group-addon">bpm</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Frequência Respiratória</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={vitalSigns.respiratoryRate}
+                      onChange={(e) => setVitalSigns({ ...vitalSigns, respiratoryRate: Number(e.target.value) })}
+                      placeholder="16"
+                    />
+                    <span className="input-group-addon">rpm</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Temperatura</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={vitalSigns.temperature}
+                      onChange={(e) => setVitalSigns({ ...vitalSigns, temperature: Number(e.target.value) })}
+                      placeholder="36.5"
+                      step="0.1"
+                    />
+                    <span className="input-group-addon">°C</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Saturação de Oxigênio</span>
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={vitalSigns.oxygenSaturation}
+                      onChange={(e) => setVitalSigns({ ...vitalSigns, oxygenSaturation: Number(e.target.value) })}
+                      placeholder="98"
+                    />
+                    <span className="input-group-addon">%</span>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Nível de Dor (0-10)</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={vitalSigns.painLevel}
+                    onChange={(e) => setVitalSigns({ ...vitalSigns, painLevel: Number(e.target.value) })}
+                    className="range"
+                    step="1"
+                  />
+                  <div className="w-full flex justify-between text-xs px-2">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+                </div>
+              </div>
 
                 <div className="flex justify-between mt-6">
                   <button
@@ -645,7 +645,7 @@ export default function Triage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span>Paciente {triagePatient?.full_name} foi classificado e encaminhado para consulta.</span>
               </div>
-              
+
               <div className="mt-6 flex gap-4">
                 <button
                   onClick={handlePrintTag}
